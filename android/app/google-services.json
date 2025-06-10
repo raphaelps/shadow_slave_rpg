@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "485714063563",
+    "project_id": "shadow-slave-rpg",
+    "storage_bucket": "shadow-slave-rpg.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:485714063563:android:83d8c04f6ebf9782a7ab4e",
+        "android_client_info": {
+          "package_name": "com.example.shadow_slave_rpg"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAjsZChGl5JmNTFmPPc0r604EdUW3CqXkk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

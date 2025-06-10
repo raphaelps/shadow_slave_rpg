@@ -1,0 +1,38 @@
+name: shadow_slave_rpg
+description: "Projeto shadow_slave_rpg, Um jogo baseado na novel Shadow Slave."
+
+publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.7.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+
+  sqflite: ^2.3.0 # Para SQLite local
+  path: ^1.8.3 # Para gerenciar caminhos de arquivos
+  drift: ^2.14.0 # Para abstração do SQLite e geração de código (alternativa robusta ao sqflite puro)
+  sqlite3_flutter_libs: ^0.5.0 # Suporte nativo para SQLite com drift
+  firebase_core: ^2.32.0 # Core do Firebase
+  firebase_auth: ^4.15.2 # Autenticação Firebase
+  cloud_firestore: ^4.13.3 # Firestore
+  uuid: ^4.2.1 # Para gerar IDs únicos offline
+  random_string: ^2.3.1 # Para gerar strings aleatórias (para IDs de usuário anônimos)
+  provider: ^6.1.5
+  path_provider: ^2.1.5
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^5.0.0
+  drift_dev: ^2.14.0 # Necessário para gerar código drift
+  build_runner: ^2.4.8 # Necessário para rodar o gerador de código drift
+
+flutter:
+  uses-material-design: true

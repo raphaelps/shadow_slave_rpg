@@ -1,0 +1,94 @@
+# Arquivos de build do Flutter
+.flutter/
+.dart_tool/
+build/
+.packages
+
+# Arquivos de configuração da IDE
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+
+# Arquivos de dependência do Dart
+.flutter-plugins
+.flutter-plugins-dependencies
+.dart_tool/
+
+# Logs e caches
+*.log
+*.DS_Store
+DerivedData/
+
+# Arquivos gerados pelo Android Studio / IntelliJ
+.gradle/
+captures/
+local.properties
+.externalNativeBuild/
+android/.idea/
+android/local.properties
+android/.gradle/
+android/build/
+android/.externalNativeBuild/
+android/captures/
+android/gradle/wrapper/gradle-wrapper.properties.temp
+android/app/build/
+android/app/.cxx/
+android/app/.externalNativeBuild/
+# Para assets de release que não precisam ser versionados
+android/app/src/main/assets/flutter_assets/ 
+
+# Arquivos gerados pelo Xcode / iOS
+ios/.symlinks/
+ios/Flutter/Generated.xcconfig
+ios/Flutter/App.framework
+ios/Flutter/flutter_assets
+ios/Pods/
+ios/.generated/
+ios/build/
+ios/*.xcworkspace/
+ios/*.xcodeproj/project.xcworkspace/
+ios/*.xcodeproj/xcuserdata/
+
+# Arquivos específicos do VS Code
+.vscode/
+
+# Dependências pub
+.pub-cache/
+
+# Arquivos de credenciais e chaves (MUITO IMPORTANTE!)
+*.env
+.env
+# Se você tiver arquivos de configuração Firebase, eles devem ser ignorados. Ex:
+ google-services.json
+ GoogleService-Info.plist
+
+# Arquivos temporários e de swap
+*~
+*.bak
+*.swp
+
+# Arquivos de pacotes npm (se você estiver usando React Native dentro do Flutter, o que não é o caso aqui, mas para referência)
+# node_modules/
+
+# Arquivos de desktop (Linux/Windows)
+linux/flutter/ephemeral/
+windows/flutter/ephemeral/
+macos/Flutter/GeneratedPluginRegistrant.swift
+macos/Flutter/Flutter-bridge.h
+macos/Flutter/Flutter-bridge.m
+macos/Flutter/ephemeral/
+
+#Como usar:
+#Crie (ou abra) um arquivo chamado .gitignore na raiz do seu projeto Flutter (na mesma pasta onde está o pubspec.yaml).
+
+#Cole todo o conteúdo fornecido acima dentro desse arquivo.
+
+#Salve o arquivo.
+
+#Adicione e commite: Se você já inicializou um repositório Git, use git add . e git commit -m 
+#"Adiciona .gitignore" para que o Git comece a ignorar esses arquivos. Se você já tinha arquivos na lista .gitignore versionados,
+# pode ser necessário limpá-los do cache do Git com git rm --cached <arquivo> antes de commitar.
+
+#Este .gitignore cobre a maioria dos cenários para projetos Flutter e ajuda a manter seu repositório limpo e focado apenas no código fonte essencial.
