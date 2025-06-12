@@ -75,8 +75,17 @@ class Characters extends Table {
       text().nullable().references(ChildhoodChoices, #id)();
   TextColumn get majorEventChoiceId =>
       text().nullable().references(MajorEventChoices, #id)();
-  TextColumn get darkAwakeningChoiceId =>
-      text().nullable().references(DarkAwakeningChoices, #id)();
+  TextColumn get adultChoiceId =>
+      text().nullable().references(AdultChoices, #id)();
+
+
+// NOVAS COLUNAS PARA AS RESISTÊNCIAS
+  IntColumn get resistanceMental => integer().withDefault(const Constant(0))(); // Resistência Mental
+  IntColumn get resistanceSpiritual => integer().withDefault(const Constant(0))(); // Resistência Espiritual
+  IntColumn get resistanceElementalHeat => integer().withDefault(const Constant(0))(); // Resistência Elemental: Calor
+  IntColumn get resistanceElementalCold => integer().withDefault(const Constant(0))(); // Resistência Elemental: Frio
+  IntColumn get resistanceElementalPoison => integer().withDefault(const Constant(0))(); // Resistência Elemental: Veneno
+  IntColumn get resistancePhysical => integer().withDefault(const Constant(0))(); // Resistência Física
 
   @override
   Set<Column> get primaryKey => {id}; // Define 'id' como chave primária

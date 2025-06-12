@@ -1,10 +1,7 @@
 // lib/models/ability.dart
 import 'package:drift/drift.dart';
-//import 'package:uuid/uuid.dart'; // Importe para gerar IDs únicos
 import 'package:shadow_slave_rpg/models/character.dart'; // Para CharacterRankConverter
 
-// Instância local do gerador de UUID
-//final uuid = Uuid();
 
 // Enum para os tipos de Aspectos
 enum AspectType {
@@ -81,18 +78,44 @@ class AspectTypeConverter extends TypeConverter<AspectType, String> {
   }
 }
 
-// Tabela para armazenar as habilidades
+// Tabela para armazenar as Habilidades (mais genéricas, talvez ligadas a Aspectos/Ranks)
 @DataClassName('AbilityData')
 class Abilities extends Table {
   TextColumn get id => text().clientDefault(() => uuid.v4())(); // ID único da habilidade
-  TextColumn get characterId => text().references(Characters, #id)(); // Chave estrangeira para o personagem
+  TextColumn get characterId => text().nullable()(); // Pode ser nulo para habilidades globais
   TextColumn get name => text().withLength(min: 1, max: 100)(); // Nome da habilidade
   TextColumn get description => text().nullable()(); // Descrição da habilidade
   IntColumn get manaCost => integer().withDefault(const Constant(0))(); // Custo de mana
   IntColumn get cooldown => integer().withDefault(const Constant(0))(); // Tempo de recarga
   TextColumn get rankRequired => text().map(const CharacterRankConverter())(); // Rank necessário para a habilidade
-  TextColumn get aspectType => text().map(const AspectTypeConverter())(); // Tipo de aspecto da habilidade
+  TextColumn get aspectType => text().map(const AspectTypeConverter()).nullable()(); // Tipo de aspecto da habilidade (pode ser nulo se não for baseada em Aspecto)
 
   @override
   Set<Column> get primaryKey => {id};
+}
+
+// NOVA TABELA: Para armazenar Poderes (habilidades mais únicas ou adquiridas de forma especial)
+@DataClassName('PowerData')
+class Powers extends Table {
+  TextColumn get id => text().clientDefault(() => uuid.v4())(); // ID único do poder
+  TextColumn get name => text().withLength(min: 1, max: 100)(); // Nome do poder
+  TextColumn get description => text().nullable()(); // Descrição do poder
+  TextColumn get sourceType => text().nullable()(); // Ex: 'BossDrop', 'SpecialEvent', 'QuestReward'
+  IntColumn get manaCost => integer().withDefault(const Constant(0))();
+  IntColumn get cooldown => integer().withDefault(const Constant(0))();
+  TextColumn get rankRequired => text().map(const CharacterRankConverter()).nullable()(); // Rank mínimo para usar, se houver
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+// NOVA TABELA DE JUNÇÃO: Para vincular Poderes a Personagens
+@DataClassName('CharacterPowerData')
+class CharacterPowers extends Table {
+  TextColumn get characterId => text().references(Characters, #id)(); // Chave estrangeira para o personagem
+  TextColumn get powerId => text().references(Powers, #id)(); // Chave estrangeira para o poder
+  BoolColumn get isEquipped => boolean().withDefault(const Constant(false))(); // Se o poder está "equipado" ou ativo
+
+  @override
+  Set<Column> get primaryKey => {characterId, powerId}; // Chave primária composta
 }

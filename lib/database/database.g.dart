@@ -42,8 +42,44 @@ class $TraitsTable extends Traits with TableInfo<$TraitsTable, TraitData> {
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _isStrengthMeta = const VerificationMeta(
+    'isStrength',
+  );
   @override
-  List<GeneratedColumn> get $columns => [id, name, description];
+  late final GeneratedColumn<bool> isStrength = GeneratedColumn<bool>(
+    'is_strength',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_strength" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _isWeaknessMeta = const VerificationMeta(
+    'isWeakness',
+  );
+  @override
+  late final GeneratedColumn<bool> isWeakness = GeneratedColumn<bool>(
+    'is_weakness',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_weakness" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    name,
+    description,
+    isStrength,
+    isWeakness,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -76,6 +112,18 @@ class $TraitsTable extends Traits with TableInfo<$TraitsTable, TraitData> {
         ),
       );
     }
+    if (data.containsKey('is_strength')) {
+      context.handle(
+        _isStrengthMeta,
+        isStrength.isAcceptableOrUnknown(data['is_strength']!, _isStrengthMeta),
+      );
+    }
+    if (data.containsKey('is_weakness')) {
+      context.handle(
+        _isWeaknessMeta,
+        isWeakness.isAcceptableOrUnknown(data['is_weakness']!, _isWeaknessMeta),
+      );
+    }
     return context;
   }
 
@@ -99,6 +147,16 @@ class $TraitsTable extends Traits with TableInfo<$TraitsTable, TraitData> {
         DriftSqlType.string,
         data['${effectivePrefix}description'],
       ),
+      isStrength:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.bool,
+            data['${effectivePrefix}is_strength'],
+          )!,
+      isWeakness:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.bool,
+            data['${effectivePrefix}is_weakness'],
+          )!,
     );
   }
 
@@ -112,7 +170,15 @@ class TraitData extends DataClass implements Insertable<TraitData> {
   final String id;
   final String name;
   final String? description;
-  const TraitData({required this.id, required this.name, this.description});
+  final bool isStrength;
+  final bool isWeakness;
+  const TraitData({
+    required this.id,
+    required this.name,
+    this.description,
+    required this.isStrength,
+    required this.isWeakness,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -121,6 +187,8 @@ class TraitData extends DataClass implements Insertable<TraitData> {
     if (!nullToAbsent || description != null) {
       map['description'] = Variable<String>(description);
     }
+    map['is_strength'] = Variable<bool>(isStrength);
+    map['is_weakness'] = Variable<bool>(isWeakness);
     return map;
   }
 
@@ -132,6 +200,8 @@ class TraitData extends DataClass implements Insertable<TraitData> {
           description == null && nullToAbsent
               ? const Value.absent()
               : Value(description),
+      isStrength: Value(isStrength),
+      isWeakness: Value(isWeakness),
     );
   }
 
@@ -144,6 +214,8 @@ class TraitData extends DataClass implements Insertable<TraitData> {
       id: serializer.fromJson<String>(json['id']),
       name: serializer.fromJson<String>(json['name']),
       description: serializer.fromJson<String?>(json['description']),
+      isStrength: serializer.fromJson<bool>(json['isStrength']),
+      isWeakness: serializer.fromJson<bool>(json['isWeakness']),
     );
   }
   @override
@@ -153,6 +225,8 @@ class TraitData extends DataClass implements Insertable<TraitData> {
       'id': serializer.toJson<String>(id),
       'name': serializer.toJson<String>(name),
       'description': serializer.toJson<String?>(description),
+      'isStrength': serializer.toJson<bool>(isStrength),
+      'isWeakness': serializer.toJson<bool>(isWeakness),
     };
   }
 
@@ -160,10 +234,14 @@ class TraitData extends DataClass implements Insertable<TraitData> {
     String? id,
     String? name,
     Value<String?> description = const Value.absent(),
+    bool? isStrength,
+    bool? isWeakness,
   }) => TraitData(
     id: id ?? this.id,
     name: name ?? this.name,
     description: description.present ? description.value : this.description,
+    isStrength: isStrength ?? this.isStrength,
+    isWeakness: isWeakness ?? this.isWeakness,
   );
   TraitData copyWithCompanion(TraitsCompanion data) {
     return TraitData(
@@ -171,6 +249,10 @@ class TraitData extends DataClass implements Insertable<TraitData> {
       name: data.name.present ? data.name.value : this.name,
       description:
           data.description.present ? data.description.value : this.description,
+      isStrength:
+          data.isStrength.present ? data.isStrength.value : this.isStrength,
+      isWeakness:
+          data.isWeakness.present ? data.isWeakness.value : this.isWeakness,
     );
   }
 
@@ -179,49 +261,64 @@ class TraitData extends DataClass implements Insertable<TraitData> {
     return (StringBuffer('TraitData(')
           ..write('id: $id, ')
           ..write('name: $name, ')
-          ..write('description: $description')
+          ..write('description: $description, ')
+          ..write('isStrength: $isStrength, ')
+          ..write('isWeakness: $isWeakness')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, name, description);
+  int get hashCode =>
+      Object.hash(id, name, description, isStrength, isWeakness);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is TraitData &&
           other.id == this.id &&
           other.name == this.name &&
-          other.description == this.description);
+          other.description == this.description &&
+          other.isStrength == this.isStrength &&
+          other.isWeakness == this.isWeakness);
 }
 
 class TraitsCompanion extends UpdateCompanion<TraitData> {
   final Value<String> id;
   final Value<String> name;
   final Value<String?> description;
+  final Value<bool> isStrength;
+  final Value<bool> isWeakness;
   final Value<int> rowid;
   const TraitsCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
     this.description = const Value.absent(),
+    this.isStrength = const Value.absent(),
+    this.isWeakness = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   TraitsCompanion.insert({
     this.id = const Value.absent(),
     required String name,
     this.description = const Value.absent(),
+    this.isStrength = const Value.absent(),
+    this.isWeakness = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : name = Value(name);
   static Insertable<TraitData> custom({
     Expression<String>? id,
     Expression<String>? name,
     Expression<String>? description,
+    Expression<bool>? isStrength,
+    Expression<bool>? isWeakness,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (name != null) 'name': name,
       if (description != null) 'description': description,
+      if (isStrength != null) 'is_strength': isStrength,
+      if (isWeakness != null) 'is_weakness': isWeakness,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -230,12 +327,16 @@ class TraitsCompanion extends UpdateCompanion<TraitData> {
     Value<String>? id,
     Value<String>? name,
     Value<String?>? description,
+    Value<bool>? isStrength,
+    Value<bool>? isWeakness,
     Value<int>? rowid,
   }) {
     return TraitsCompanion(
       id: id ?? this.id,
       name: name ?? this.name,
       description: description ?? this.description,
+      isStrength: isStrength ?? this.isStrength,
+      isWeakness: isWeakness ?? this.isWeakness,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -252,6 +353,12 @@ class TraitsCompanion extends UpdateCompanion<TraitData> {
     if (description.present) {
       map['description'] = Variable<String>(description.value);
     }
+    if (isStrength.present) {
+      map['is_strength'] = Variable<bool>(isStrength.value);
+    }
+    if (isWeakness.present) {
+      map['is_weakness'] = Variable<bool>(isWeakness.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -264,6 +371,8 @@ class TraitsCompanion extends UpdateCompanion<TraitData> {
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('description: $description, ')
+          ..write('isStrength: $isStrength, ')
+          ..write('isWeakness: $isWeakness, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -1372,12 +1481,12 @@ class MajorEventChoicesCompanion extends UpdateCompanion<MajorEventChoiceData> {
   }
 }
 
-class $DarkAwakeningChoicesTable extends DarkAwakeningChoices
-    with TableInfo<$DarkAwakeningChoicesTable, DarkAwakeningChoiceData> {
+class $AdultChoicesTable extends AdultChoices
+    with TableInfo<$AdultChoicesTable, AdultChoiceData> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
-  $DarkAwakeningChoicesTable(this.attachedDatabase, [this._alias]);
+  $AdultChoicesTable(this.attachedDatabase, [this._alias]);
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<String> id = GeneratedColumn<String>(
@@ -1485,9 +1594,7 @@ class $DarkAwakeningChoicesTable extends DarkAwakeningChoices
         true,
         type: DriftSqlType.string,
         requiredDuringInsert: false,
-      ).withConverter<AspectType?>(
-        $DarkAwakeningChoicesTable.$converteraspectTypen,
-      );
+      ).withConverter<AspectType?>($AdultChoicesTable.$converteraspectTypen);
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1504,10 +1611,10 @@ class $DarkAwakeningChoicesTable extends DarkAwakeningChoices
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
-  static const String $name = 'dark_awakening_choices';
+  static const String $name = 'adult_choices';
   @override
   VerificationContext validateIntegrity(
-    Insertable<DarkAwakeningChoiceData> instance, {
+    Insertable<AdultChoiceData> instance, {
     bool isInserting = false,
   }) {
     final context = VerificationContext();
@@ -1583,12 +1690,9 @@ class $DarkAwakeningChoicesTable extends DarkAwakeningChoices
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
-  DarkAwakeningChoiceData map(
-    Map<String, dynamic> data, {
-    String? tablePrefix,
-  }) {
+  AdultChoiceData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return DarkAwakeningChoiceData(
+    return AdultChoiceData(
       id:
           attachedDatabase.typeMapping.read(
             DriftSqlType.string,
@@ -1628,7 +1732,7 @@ class $DarkAwakeningChoicesTable extends DarkAwakeningChoices
             DriftSqlType.int,
             data['${effectivePrefix}endurance_bonus'],
           )!,
-      aspectType: $DarkAwakeningChoicesTable.$converteraspectTypen.fromSql(
+      aspectType: $AdultChoicesTable.$converteraspectTypen.fromSql(
         attachedDatabase.typeMapping.read(
           DriftSqlType.string,
           data['${effectivePrefix}aspect_type'],
@@ -1638,8 +1742,8 @@ class $DarkAwakeningChoicesTable extends DarkAwakeningChoices
   }
 
   @override
-  $DarkAwakeningChoicesTable createAlias(String alias) {
-    return $DarkAwakeningChoicesTable(attachedDatabase, alias);
+  $AdultChoicesTable createAlias(String alias) {
+    return $AdultChoicesTable(attachedDatabase, alias);
   }
 
   static TypeConverter<AspectType, String> $converteraspectType =
@@ -1648,8 +1752,7 @@ class $DarkAwakeningChoicesTable extends DarkAwakeningChoices
       NullAwareTypeConverter.wrap($converteraspectType);
 }
 
-class DarkAwakeningChoiceData extends DataClass
-    implements Insertable<DarkAwakeningChoiceData> {
+class AdultChoiceData extends DataClass implements Insertable<AdultChoiceData> {
   final String id;
   final String description;
   final String? traitId;
@@ -1659,7 +1762,7 @@ class DarkAwakeningChoiceData extends DataClass
   final int perceptionBonus;
   final int enduranceBonus;
   final AspectType? aspectType;
-  const DarkAwakeningChoiceData({
+  const AdultChoiceData({
     required this.id,
     required this.description,
     this.traitId,
@@ -1685,14 +1788,14 @@ class DarkAwakeningChoiceData extends DataClass
     map['endurance_bonus'] = Variable<int>(enduranceBonus);
     if (!nullToAbsent || aspectType != null) {
       map['aspect_type'] = Variable<String>(
-        $DarkAwakeningChoicesTable.$converteraspectTypen.toSql(aspectType),
+        $AdultChoicesTable.$converteraspectTypen.toSql(aspectType),
       );
     }
     return map;
   }
 
-  DarkAwakeningChoicesCompanion toCompanion(bool nullToAbsent) {
-    return DarkAwakeningChoicesCompanion(
+  AdultChoicesCompanion toCompanion(bool nullToAbsent) {
+    return AdultChoicesCompanion(
       id: Value(id),
       description: Value(description),
       traitId:
@@ -1711,12 +1814,12 @@ class DarkAwakeningChoiceData extends DataClass
     );
   }
 
-  factory DarkAwakeningChoiceData.fromJson(
+  factory AdultChoiceData.fromJson(
     Map<String, dynamic> json, {
     ValueSerializer? serializer,
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return DarkAwakeningChoiceData(
+    return AdultChoiceData(
       id: serializer.fromJson<String>(json['id']),
       description: serializer.fromJson<String>(json['description']),
       traitId: serializer.fromJson<String?>(json['traitId']),
@@ -1744,7 +1847,7 @@ class DarkAwakeningChoiceData extends DataClass
     };
   }
 
-  DarkAwakeningChoiceData copyWith({
+  AdultChoiceData copyWith({
     String? id,
     String? description,
     Value<String?> traitId = const Value.absent(),
@@ -1754,7 +1857,7 @@ class DarkAwakeningChoiceData extends DataClass
     int? perceptionBonus,
     int? enduranceBonus,
     Value<AspectType?> aspectType = const Value.absent(),
-  }) => DarkAwakeningChoiceData(
+  }) => AdultChoiceData(
     id: id ?? this.id,
     description: description ?? this.description,
     traitId: traitId.present ? traitId.value : this.traitId,
@@ -1765,10 +1868,8 @@ class DarkAwakeningChoiceData extends DataClass
     enduranceBonus: enduranceBonus ?? this.enduranceBonus,
     aspectType: aspectType.present ? aspectType.value : this.aspectType,
   );
-  DarkAwakeningChoiceData copyWithCompanion(
-    DarkAwakeningChoicesCompanion data,
-  ) {
-    return DarkAwakeningChoiceData(
+  AdultChoiceData copyWithCompanion(AdultChoicesCompanion data) {
+    return AdultChoiceData(
       id: data.id.present ? data.id.value : this.id,
       description:
           data.description.present ? data.description.value : this.description,
@@ -1800,7 +1901,7 @@ class DarkAwakeningChoiceData extends DataClass
 
   @override
   String toString() {
-    return (StringBuffer('DarkAwakeningChoiceData(')
+    return (StringBuffer('AdultChoiceData(')
           ..write('id: $id, ')
           ..write('description: $description, ')
           ..write('traitId: $traitId, ')
@@ -1829,7 +1930,7 @@ class DarkAwakeningChoiceData extends DataClass
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is DarkAwakeningChoiceData &&
+      (other is AdultChoiceData &&
           other.id == this.id &&
           other.description == this.description &&
           other.traitId == this.traitId &&
@@ -1841,8 +1942,7 @@ class DarkAwakeningChoiceData extends DataClass
           other.aspectType == this.aspectType);
 }
 
-class DarkAwakeningChoicesCompanion
-    extends UpdateCompanion<DarkAwakeningChoiceData> {
+class AdultChoicesCompanion extends UpdateCompanion<AdultChoiceData> {
   final Value<String> id;
   final Value<String> description;
   final Value<String?> traitId;
@@ -1853,7 +1953,7 @@ class DarkAwakeningChoicesCompanion
   final Value<int> enduranceBonus;
   final Value<AspectType?> aspectType;
   final Value<int> rowid;
-  const DarkAwakeningChoicesCompanion({
+  const AdultChoicesCompanion({
     this.id = const Value.absent(),
     this.description = const Value.absent(),
     this.traitId = const Value.absent(),
@@ -1865,7 +1965,7 @@ class DarkAwakeningChoicesCompanion
     this.aspectType = const Value.absent(),
     this.rowid = const Value.absent(),
   });
-  DarkAwakeningChoicesCompanion.insert({
+  AdultChoicesCompanion.insert({
     this.id = const Value.absent(),
     required String description,
     this.traitId = const Value.absent(),
@@ -1877,7 +1977,7 @@ class DarkAwakeningChoicesCompanion
     this.aspectType = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : description = Value(description);
-  static Insertable<DarkAwakeningChoiceData> custom({
+  static Insertable<AdultChoiceData> custom({
     Expression<String>? id,
     Expression<String>? description,
     Expression<String>? traitId,
@@ -1903,7 +2003,7 @@ class DarkAwakeningChoicesCompanion
     });
   }
 
-  DarkAwakeningChoicesCompanion copyWith({
+  AdultChoicesCompanion copyWith({
     Value<String>? id,
     Value<String>? description,
     Value<String?>? traitId,
@@ -1915,7 +2015,7 @@ class DarkAwakeningChoicesCompanion
     Value<AspectType?>? aspectType,
     Value<int>? rowid,
   }) {
-    return DarkAwakeningChoicesCompanion(
+    return AdultChoicesCompanion(
       id: id ?? this.id,
       description: description ?? this.description,
       traitId: traitId ?? this.traitId,
@@ -1958,9 +2058,7 @@ class DarkAwakeningChoicesCompanion
     }
     if (aspectType.present) {
       map['aspect_type'] = Variable<String>(
-        $DarkAwakeningChoicesTable.$converteraspectTypen.toSql(
-          aspectType.value,
-        ),
+        $AdultChoicesTable.$converteraspectTypen.toSql(aspectType.value),
       );
     }
     if (rowid.present) {
@@ -1971,7 +2069,7 @@ class DarkAwakeningChoicesCompanion
 
   @override
   String toString() {
-    return (StringBuffer('DarkAwakeningChoicesCompanion(')
+    return (StringBuffer('AdultChoicesCompanion(')
           ..write('id: $id, ')
           ..write('description: $description, ')
           ..write('traitId: $traitId, ')
@@ -2203,20 +2301,90 @@ class $CharactersTable extends Characters
           'REFERENCES major_event_choices (id)',
         ),
       );
-  static const VerificationMeta _darkAwakeningChoiceIdMeta =
-      const VerificationMeta('darkAwakeningChoiceId');
+  static const VerificationMeta _adultChoiceIdMeta = const VerificationMeta(
+    'adultChoiceId',
+  );
   @override
-  late final GeneratedColumn<String> darkAwakeningChoiceId =
-      GeneratedColumn<String>(
-        'dark_awakening_choice_id',
+  late final GeneratedColumn<String> adultChoiceId = GeneratedColumn<String>(
+    'adult_choice_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES adult_choices (id)',
+    ),
+  );
+  static const VerificationMeta _resistanceMentalMeta = const VerificationMeta(
+    'resistanceMental',
+  );
+  @override
+  late final GeneratedColumn<int> resistanceMental = GeneratedColumn<int>(
+    'resistance_mental',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _resistanceSpiritualMeta =
+      const VerificationMeta('resistanceSpiritual');
+  @override
+  late final GeneratedColumn<int> resistanceSpiritual = GeneratedColumn<int>(
+    'resistance_spiritual',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _resistanceElementalHeatMeta =
+      const VerificationMeta('resistanceElementalHeat');
+  @override
+  late final GeneratedColumn<int> resistanceElementalHeat =
+      GeneratedColumn<int>(
+        'resistance_elemental_heat',
         aliasedName,
-        true,
-        type: DriftSqlType.string,
+        false,
+        type: DriftSqlType.int,
         requiredDuringInsert: false,
-        defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'REFERENCES dark_awakening_choices (id)',
-        ),
+        defaultValue: const Constant(0),
       );
+  static const VerificationMeta _resistanceElementalColdMeta =
+      const VerificationMeta('resistanceElementalCold');
+  @override
+  late final GeneratedColumn<int> resistanceElementalCold =
+      GeneratedColumn<int>(
+        'resistance_elemental_cold',
+        aliasedName,
+        false,
+        type: DriftSqlType.int,
+        requiredDuringInsert: false,
+        defaultValue: const Constant(0),
+      );
+  static const VerificationMeta _resistanceElementalPoisonMeta =
+      const VerificationMeta('resistanceElementalPoison');
+  @override
+  late final GeneratedColumn<int> resistanceElementalPoison =
+      GeneratedColumn<int>(
+        'resistance_elemental_poison',
+        aliasedName,
+        false,
+        type: DriftSqlType.int,
+        requiredDuringInsert: false,
+        defaultValue: const Constant(0),
+      );
+  static const VerificationMeta _resistancePhysicalMeta =
+      const VerificationMeta('resistancePhysical');
+  @override
+  late final GeneratedColumn<int> resistancePhysical = GeneratedColumn<int>(
+    'resistance_physical',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -2237,7 +2405,13 @@ class $CharactersTable extends Characters
     abilitiesRevealed,
     childhoodChoiceId,
     majorEventChoiceId,
-    darkAwakeningChoiceId,
+    adultChoiceId,
+    resistanceMental,
+    resistanceSpiritual,
+    resistanceElementalHeat,
+    resistanceElementalCold,
+    resistanceElementalPoison,
+    resistancePhysical,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2369,12 +2543,66 @@ class $CharactersTable extends Characters
         ),
       );
     }
-    if (data.containsKey('dark_awakening_choice_id')) {
+    if (data.containsKey('adult_choice_id')) {
       context.handle(
-        _darkAwakeningChoiceIdMeta,
-        darkAwakeningChoiceId.isAcceptableOrUnknown(
-          data['dark_awakening_choice_id']!,
-          _darkAwakeningChoiceIdMeta,
+        _adultChoiceIdMeta,
+        adultChoiceId.isAcceptableOrUnknown(
+          data['adult_choice_id']!,
+          _adultChoiceIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('resistance_mental')) {
+      context.handle(
+        _resistanceMentalMeta,
+        resistanceMental.isAcceptableOrUnknown(
+          data['resistance_mental']!,
+          _resistanceMentalMeta,
+        ),
+      );
+    }
+    if (data.containsKey('resistance_spiritual')) {
+      context.handle(
+        _resistanceSpiritualMeta,
+        resistanceSpiritual.isAcceptableOrUnknown(
+          data['resistance_spiritual']!,
+          _resistanceSpiritualMeta,
+        ),
+      );
+    }
+    if (data.containsKey('resistance_elemental_heat')) {
+      context.handle(
+        _resistanceElementalHeatMeta,
+        resistanceElementalHeat.isAcceptableOrUnknown(
+          data['resistance_elemental_heat']!,
+          _resistanceElementalHeatMeta,
+        ),
+      );
+    }
+    if (data.containsKey('resistance_elemental_cold')) {
+      context.handle(
+        _resistanceElementalColdMeta,
+        resistanceElementalCold.isAcceptableOrUnknown(
+          data['resistance_elemental_cold']!,
+          _resistanceElementalColdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('resistance_elemental_poison')) {
+      context.handle(
+        _resistanceElementalPoisonMeta,
+        resistanceElementalPoison.isAcceptableOrUnknown(
+          data['resistance_elemental_poison']!,
+          _resistanceElementalPoisonMeta,
+        ),
+      );
+    }
+    if (data.containsKey('resistance_physical')) {
+      context.handle(
+        _resistancePhysicalMeta,
+        resistancePhysical.isAcceptableOrUnknown(
+          data['resistance_physical']!,
+          _resistancePhysicalMeta,
         ),
       );
     }
@@ -2475,10 +2703,40 @@ class $CharactersTable extends Characters
         DriftSqlType.string,
         data['${effectivePrefix}major_event_choice_id'],
       ),
-      darkAwakeningChoiceId: attachedDatabase.typeMapping.read(
+      adultChoiceId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
-        data['${effectivePrefix}dark_awakening_choice_id'],
+        data['${effectivePrefix}adult_choice_id'],
       ),
+      resistanceMental:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}resistance_mental'],
+          )!,
+      resistanceSpiritual:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}resistance_spiritual'],
+          )!,
+      resistanceElementalHeat:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}resistance_elemental_heat'],
+          )!,
+      resistanceElementalCold:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}resistance_elemental_cold'],
+          )!,
+      resistanceElementalPoison:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}resistance_elemental_poison'],
+          )!,
+      resistancePhysical:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}resistance_physical'],
+          )!,
     );
   }
 
@@ -2510,7 +2768,13 @@ class CharacterData extends DataClass implements Insertable<CharacterData> {
   final bool abilitiesRevealed;
   final String? childhoodChoiceId;
   final String? majorEventChoiceId;
-  final String? darkAwakeningChoiceId;
+  final String? adultChoiceId;
+  final int resistanceMental;
+  final int resistanceSpiritual;
+  final int resistanceElementalHeat;
+  final int resistanceElementalCold;
+  final int resistanceElementalPoison;
+  final int resistancePhysical;
   const CharacterData({
     required this.id,
     required this.userId,
@@ -2530,7 +2794,13 @@ class CharacterData extends DataClass implements Insertable<CharacterData> {
     required this.abilitiesRevealed,
     this.childhoodChoiceId,
     this.majorEventChoiceId,
-    this.darkAwakeningChoiceId,
+    this.adultChoiceId,
+    required this.resistanceMental,
+    required this.resistanceSpiritual,
+    required this.resistanceElementalHeat,
+    required this.resistanceElementalCold,
+    required this.resistanceElementalPoison,
+    required this.resistancePhysical,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -2563,9 +2833,17 @@ class CharacterData extends DataClass implements Insertable<CharacterData> {
     if (!nullToAbsent || majorEventChoiceId != null) {
       map['major_event_choice_id'] = Variable<String>(majorEventChoiceId);
     }
-    if (!nullToAbsent || darkAwakeningChoiceId != null) {
-      map['dark_awakening_choice_id'] = Variable<String>(darkAwakeningChoiceId);
+    if (!nullToAbsent || adultChoiceId != null) {
+      map['adult_choice_id'] = Variable<String>(adultChoiceId);
     }
+    map['resistance_mental'] = Variable<int>(resistanceMental);
+    map['resistance_spiritual'] = Variable<int>(resistanceSpiritual);
+    map['resistance_elemental_heat'] = Variable<int>(resistanceElementalHeat);
+    map['resistance_elemental_cold'] = Variable<int>(resistanceElementalCold);
+    map['resistance_elemental_poison'] = Variable<int>(
+      resistanceElementalPoison,
+    );
+    map['resistance_physical'] = Variable<int>(resistancePhysical);
     return map;
   }
 
@@ -2596,10 +2874,16 @@ class CharacterData extends DataClass implements Insertable<CharacterData> {
           majorEventChoiceId == null && nullToAbsent
               ? const Value.absent()
               : Value(majorEventChoiceId),
-      darkAwakeningChoiceId:
-          darkAwakeningChoiceId == null && nullToAbsent
+      adultChoiceId:
+          adultChoiceId == null && nullToAbsent
               ? const Value.absent()
-              : Value(darkAwakeningChoiceId),
+              : Value(adultChoiceId),
+      resistanceMental: Value(resistanceMental),
+      resistanceSpiritual: Value(resistanceSpiritual),
+      resistanceElementalHeat: Value(resistanceElementalHeat),
+      resistanceElementalCold: Value(resistanceElementalCold),
+      resistanceElementalPoison: Value(resistanceElementalPoison),
+      resistancePhysical: Value(resistancePhysical),
     );
   }
 
@@ -2631,9 +2915,21 @@ class CharacterData extends DataClass implements Insertable<CharacterData> {
       majorEventChoiceId: serializer.fromJson<String?>(
         json['majorEventChoiceId'],
       ),
-      darkAwakeningChoiceId: serializer.fromJson<String?>(
-        json['darkAwakeningChoiceId'],
+      adultChoiceId: serializer.fromJson<String?>(json['adultChoiceId']),
+      resistanceMental: serializer.fromJson<int>(json['resistanceMental']),
+      resistanceSpiritual: serializer.fromJson<int>(
+        json['resistanceSpiritual'],
       ),
+      resistanceElementalHeat: serializer.fromJson<int>(
+        json['resistanceElementalHeat'],
+      ),
+      resistanceElementalCold: serializer.fromJson<int>(
+        json['resistanceElementalCold'],
+      ),
+      resistanceElementalPoison: serializer.fromJson<int>(
+        json['resistanceElementalPoison'],
+      ),
+      resistancePhysical: serializer.fromJson<int>(json['resistancePhysical']),
     );
   }
   @override
@@ -2658,9 +2954,19 @@ class CharacterData extends DataClass implements Insertable<CharacterData> {
       'abilitiesRevealed': serializer.toJson<bool>(abilitiesRevealed),
       'childhoodChoiceId': serializer.toJson<String?>(childhoodChoiceId),
       'majorEventChoiceId': serializer.toJson<String?>(majorEventChoiceId),
-      'darkAwakeningChoiceId': serializer.toJson<String?>(
-        darkAwakeningChoiceId,
+      'adultChoiceId': serializer.toJson<String?>(adultChoiceId),
+      'resistanceMental': serializer.toJson<int>(resistanceMental),
+      'resistanceSpiritual': serializer.toJson<int>(resistanceSpiritual),
+      'resistanceElementalHeat': serializer.toJson<int>(
+        resistanceElementalHeat,
       ),
+      'resistanceElementalCold': serializer.toJson<int>(
+        resistanceElementalCold,
+      ),
+      'resistanceElementalPoison': serializer.toJson<int>(
+        resistanceElementalPoison,
+      ),
+      'resistancePhysical': serializer.toJson<int>(resistancePhysical),
     };
   }
 
@@ -2683,7 +2989,13 @@ class CharacterData extends DataClass implements Insertable<CharacterData> {
     bool? abilitiesRevealed,
     Value<String?> childhoodChoiceId = const Value.absent(),
     Value<String?> majorEventChoiceId = const Value.absent(),
-    Value<String?> darkAwakeningChoiceId = const Value.absent(),
+    Value<String?> adultChoiceId = const Value.absent(),
+    int? resistanceMental,
+    int? resistanceSpiritual,
+    int? resistanceElementalHeat,
+    int? resistanceElementalCold,
+    int? resistanceElementalPoison,
+    int? resistancePhysical,
   }) => CharacterData(
     id: id ?? this.id,
     userId: userId ?? this.userId,
@@ -2709,10 +3021,17 @@ class CharacterData extends DataClass implements Insertable<CharacterData> {
         majorEventChoiceId.present
             ? majorEventChoiceId.value
             : this.majorEventChoiceId,
-    darkAwakeningChoiceId:
-        darkAwakeningChoiceId.present
-            ? darkAwakeningChoiceId.value
-            : this.darkAwakeningChoiceId,
+    adultChoiceId:
+        adultChoiceId.present ? adultChoiceId.value : this.adultChoiceId,
+    resistanceMental: resistanceMental ?? this.resistanceMental,
+    resistanceSpiritual: resistanceSpiritual ?? this.resistanceSpiritual,
+    resistanceElementalHeat:
+        resistanceElementalHeat ?? this.resistanceElementalHeat,
+    resistanceElementalCold:
+        resistanceElementalCold ?? this.resistanceElementalCold,
+    resistanceElementalPoison:
+        resistanceElementalPoison ?? this.resistanceElementalPoison,
+    resistancePhysical: resistancePhysical ?? this.resistancePhysical,
   );
   CharacterData copyWithCompanion(CharactersCompanion data) {
     return CharacterData(
@@ -2750,10 +3069,34 @@ class CharacterData extends DataClass implements Insertable<CharacterData> {
           data.majorEventChoiceId.present
               ? data.majorEventChoiceId.value
               : this.majorEventChoiceId,
-      darkAwakeningChoiceId:
-          data.darkAwakeningChoiceId.present
-              ? data.darkAwakeningChoiceId.value
-              : this.darkAwakeningChoiceId,
+      adultChoiceId:
+          data.adultChoiceId.present
+              ? data.adultChoiceId.value
+              : this.adultChoiceId,
+      resistanceMental:
+          data.resistanceMental.present
+              ? data.resistanceMental.value
+              : this.resistanceMental,
+      resistanceSpiritual:
+          data.resistanceSpiritual.present
+              ? data.resistanceSpiritual.value
+              : this.resistanceSpiritual,
+      resistanceElementalHeat:
+          data.resistanceElementalHeat.present
+              ? data.resistanceElementalHeat.value
+              : this.resistanceElementalHeat,
+      resistanceElementalCold:
+          data.resistanceElementalCold.present
+              ? data.resistanceElementalCold.value
+              : this.resistanceElementalCold,
+      resistanceElementalPoison:
+          data.resistanceElementalPoison.present
+              ? data.resistanceElementalPoison.value
+              : this.resistanceElementalPoison,
+      resistancePhysical:
+          data.resistancePhysical.present
+              ? data.resistancePhysical.value
+              : this.resistancePhysical,
     );
   }
 
@@ -2778,13 +3121,19 @@ class CharacterData extends DataClass implements Insertable<CharacterData> {
           ..write('abilitiesRevealed: $abilitiesRevealed, ')
           ..write('childhoodChoiceId: $childhoodChoiceId, ')
           ..write('majorEventChoiceId: $majorEventChoiceId, ')
-          ..write('darkAwakeningChoiceId: $darkAwakeningChoiceId')
+          ..write('adultChoiceId: $adultChoiceId, ')
+          ..write('resistanceMental: $resistanceMental, ')
+          ..write('resistanceSpiritual: $resistanceSpiritual, ')
+          ..write('resistanceElementalHeat: $resistanceElementalHeat, ')
+          ..write('resistanceElementalCold: $resistanceElementalCold, ')
+          ..write('resistanceElementalPoison: $resistanceElementalPoison, ')
+          ..write('resistancePhysical: $resistancePhysical')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     id,
     userId,
     name,
@@ -2803,8 +3152,14 @@ class CharacterData extends DataClass implements Insertable<CharacterData> {
     abilitiesRevealed,
     childhoodChoiceId,
     majorEventChoiceId,
-    darkAwakeningChoiceId,
-  );
+    adultChoiceId,
+    resistanceMental,
+    resistanceSpiritual,
+    resistanceElementalHeat,
+    resistanceElementalCold,
+    resistanceElementalPoison,
+    resistancePhysical,
+  ]);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -2827,7 +3182,13 @@ class CharacterData extends DataClass implements Insertable<CharacterData> {
           other.abilitiesRevealed == this.abilitiesRevealed &&
           other.childhoodChoiceId == this.childhoodChoiceId &&
           other.majorEventChoiceId == this.majorEventChoiceId &&
-          other.darkAwakeningChoiceId == this.darkAwakeningChoiceId);
+          other.adultChoiceId == this.adultChoiceId &&
+          other.resistanceMental == this.resistanceMental &&
+          other.resistanceSpiritual == this.resistanceSpiritual &&
+          other.resistanceElementalHeat == this.resistanceElementalHeat &&
+          other.resistanceElementalCold == this.resistanceElementalCold &&
+          other.resistanceElementalPoison == this.resistanceElementalPoison &&
+          other.resistancePhysical == this.resistancePhysical);
 }
 
 class CharactersCompanion extends UpdateCompanion<CharacterData> {
@@ -2849,7 +3210,13 @@ class CharactersCompanion extends UpdateCompanion<CharacterData> {
   final Value<bool> abilitiesRevealed;
   final Value<String?> childhoodChoiceId;
   final Value<String?> majorEventChoiceId;
-  final Value<String?> darkAwakeningChoiceId;
+  final Value<String?> adultChoiceId;
+  final Value<int> resistanceMental;
+  final Value<int> resistanceSpiritual;
+  final Value<int> resistanceElementalHeat;
+  final Value<int> resistanceElementalCold;
+  final Value<int> resistanceElementalPoison;
+  final Value<int> resistancePhysical;
   final Value<int> rowid;
   const CharactersCompanion({
     this.id = const Value.absent(),
@@ -2870,7 +3237,13 @@ class CharactersCompanion extends UpdateCompanion<CharacterData> {
     this.abilitiesRevealed = const Value.absent(),
     this.childhoodChoiceId = const Value.absent(),
     this.majorEventChoiceId = const Value.absent(),
-    this.darkAwakeningChoiceId = const Value.absent(),
+    this.adultChoiceId = const Value.absent(),
+    this.resistanceMental = const Value.absent(),
+    this.resistanceSpiritual = const Value.absent(),
+    this.resistanceElementalHeat = const Value.absent(),
+    this.resistanceElementalCold = const Value.absent(),
+    this.resistanceElementalPoison = const Value.absent(),
+    this.resistancePhysical = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   CharactersCompanion.insert({
@@ -2892,7 +3265,13 @@ class CharactersCompanion extends UpdateCompanion<CharacterData> {
     this.abilitiesRevealed = const Value.absent(),
     this.childhoodChoiceId = const Value.absent(),
     this.majorEventChoiceId = const Value.absent(),
-    this.darkAwakeningChoiceId = const Value.absent(),
+    this.adultChoiceId = const Value.absent(),
+    this.resistanceMental = const Value.absent(),
+    this.resistanceSpiritual = const Value.absent(),
+    this.resistanceElementalHeat = const Value.absent(),
+    this.resistanceElementalCold = const Value.absent(),
+    this.resistanceElementalPoison = const Value.absent(),
+    this.resistancePhysical = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : userId = Value(userId),
        name = Value(name),
@@ -2916,7 +3295,13 @@ class CharactersCompanion extends UpdateCompanion<CharacterData> {
     Expression<bool>? abilitiesRevealed,
     Expression<String>? childhoodChoiceId,
     Expression<String>? majorEventChoiceId,
-    Expression<String>? darkAwakeningChoiceId,
+    Expression<String>? adultChoiceId,
+    Expression<int>? resistanceMental,
+    Expression<int>? resistanceSpiritual,
+    Expression<int>? resistanceElementalHeat,
+    Expression<int>? resistanceElementalCold,
+    Expression<int>? resistanceElementalPoison,
+    Expression<int>? resistancePhysical,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -2939,8 +3324,17 @@ class CharactersCompanion extends UpdateCompanion<CharacterData> {
       if (childhoodChoiceId != null) 'childhood_choice_id': childhoodChoiceId,
       if (majorEventChoiceId != null)
         'major_event_choice_id': majorEventChoiceId,
-      if (darkAwakeningChoiceId != null)
-        'dark_awakening_choice_id': darkAwakeningChoiceId,
+      if (adultChoiceId != null) 'adult_choice_id': adultChoiceId,
+      if (resistanceMental != null) 'resistance_mental': resistanceMental,
+      if (resistanceSpiritual != null)
+        'resistance_spiritual': resistanceSpiritual,
+      if (resistanceElementalHeat != null)
+        'resistance_elemental_heat': resistanceElementalHeat,
+      if (resistanceElementalCold != null)
+        'resistance_elemental_cold': resistanceElementalCold,
+      if (resistanceElementalPoison != null)
+        'resistance_elemental_poison': resistanceElementalPoison,
+      if (resistancePhysical != null) 'resistance_physical': resistancePhysical,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -2964,7 +3358,13 @@ class CharactersCompanion extends UpdateCompanion<CharacterData> {
     Value<bool>? abilitiesRevealed,
     Value<String?>? childhoodChoiceId,
     Value<String?>? majorEventChoiceId,
-    Value<String?>? darkAwakeningChoiceId,
+    Value<String?>? adultChoiceId,
+    Value<int>? resistanceMental,
+    Value<int>? resistanceSpiritual,
+    Value<int>? resistanceElementalHeat,
+    Value<int>? resistanceElementalCold,
+    Value<int>? resistanceElementalPoison,
+    Value<int>? resistancePhysical,
     Value<int>? rowid,
   }) {
     return CharactersCompanion(
@@ -2986,8 +3386,16 @@ class CharactersCompanion extends UpdateCompanion<CharacterData> {
       abilitiesRevealed: abilitiesRevealed ?? this.abilitiesRevealed,
       childhoodChoiceId: childhoodChoiceId ?? this.childhoodChoiceId,
       majorEventChoiceId: majorEventChoiceId ?? this.majorEventChoiceId,
-      darkAwakeningChoiceId:
-          darkAwakeningChoiceId ?? this.darkAwakeningChoiceId,
+      adultChoiceId: adultChoiceId ?? this.adultChoiceId,
+      resistanceMental: resistanceMental ?? this.resistanceMental,
+      resistanceSpiritual: resistanceSpiritual ?? this.resistanceSpiritual,
+      resistanceElementalHeat:
+          resistanceElementalHeat ?? this.resistanceElementalHeat,
+      resistanceElementalCold:
+          resistanceElementalCold ?? this.resistanceElementalCold,
+      resistanceElementalPoison:
+          resistanceElementalPoison ?? this.resistanceElementalPoison,
+      resistancePhysical: resistancePhysical ?? this.resistancePhysical,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -3051,10 +3459,32 @@ class CharactersCompanion extends UpdateCompanion<CharacterData> {
     if (majorEventChoiceId.present) {
       map['major_event_choice_id'] = Variable<String>(majorEventChoiceId.value);
     }
-    if (darkAwakeningChoiceId.present) {
-      map['dark_awakening_choice_id'] = Variable<String>(
-        darkAwakeningChoiceId.value,
+    if (adultChoiceId.present) {
+      map['adult_choice_id'] = Variable<String>(adultChoiceId.value);
+    }
+    if (resistanceMental.present) {
+      map['resistance_mental'] = Variable<int>(resistanceMental.value);
+    }
+    if (resistanceSpiritual.present) {
+      map['resistance_spiritual'] = Variable<int>(resistanceSpiritual.value);
+    }
+    if (resistanceElementalHeat.present) {
+      map['resistance_elemental_heat'] = Variable<int>(
+        resistanceElementalHeat.value,
       );
+    }
+    if (resistanceElementalCold.present) {
+      map['resistance_elemental_cold'] = Variable<int>(
+        resistanceElementalCold.value,
+      );
+    }
+    if (resistanceElementalPoison.present) {
+      map['resistance_elemental_poison'] = Variable<int>(
+        resistanceElementalPoison.value,
+      );
+    }
+    if (resistancePhysical.present) {
+      map['resistance_physical'] = Variable<int>(resistancePhysical.value);
     }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
@@ -3083,7 +3513,13 @@ class CharactersCompanion extends UpdateCompanion<CharacterData> {
           ..write('abilitiesRevealed: $abilitiesRevealed, ')
           ..write('childhoodChoiceId: $childhoodChoiceId, ')
           ..write('majorEventChoiceId: $majorEventChoiceId, ')
-          ..write('darkAwakeningChoiceId: $darkAwakeningChoiceId, ')
+          ..write('adultChoiceId: $adultChoiceId, ')
+          ..write('resistanceMental: $resistanceMental, ')
+          ..write('resistanceSpiritual: $resistanceSpiritual, ')
+          ..write('resistanceElementalHeat: $resistanceElementalHeat, ')
+          ..write('resistanceElementalCold: $resistanceElementalCold, ')
+          ..write('resistanceElementalPoison: $resistanceElementalPoison, ')
+          ..write('resistancePhysical: $resistancePhysical, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -3113,12 +3549,9 @@ class $AbilitiesTable extends Abilities
   late final GeneratedColumn<String> characterId = GeneratedColumn<String>(
     'character_id',
     aliasedName,
-    false,
+    true,
     type: DriftSqlType.string,
-    requiredDuringInsert: true,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES characters (id)',
-    ),
+    requiredDuringInsert: false,
   );
   static const VerificationMeta _nameMeta = const VerificationMeta('name');
   @override
@@ -3178,14 +3611,14 @@ class $AbilitiesTable extends Abilities
     requiredDuringInsert: true,
   ).withConverter<CharacterRank>($AbilitiesTable.$converterrankRequired);
   @override
-  late final GeneratedColumnWithTypeConverter<AspectType, String> aspectType =
+  late final GeneratedColumnWithTypeConverter<AspectType?, String> aspectType =
       GeneratedColumn<String>(
         'aspect_type',
         aliasedName,
-        false,
+        true,
         type: DriftSqlType.string,
-        requiredDuringInsert: true,
-      ).withConverter<AspectType>($AbilitiesTable.$converteraspectType);
+        requiredDuringInsert: false,
+      ).withConverter<AspectType?>($AbilitiesTable.$converteraspectTypen);
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -3220,8 +3653,6 @@ class $AbilitiesTable extends Abilities
           _characterIdMeta,
         ),
       );
-    } else if (isInserting) {
-      context.missing(_characterIdMeta);
     }
     if (data.containsKey('name')) {
       context.handle(
@@ -3266,11 +3697,10 @@ class $AbilitiesTable extends Abilities
             DriftSqlType.string,
             data['${effectivePrefix}id'],
           )!,
-      characterId:
-          attachedDatabase.typeMapping.read(
-            DriftSqlType.string,
-            data['${effectivePrefix}character_id'],
-          )!,
+      characterId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}character_id'],
+      ),
       name:
           attachedDatabase.typeMapping.read(
             DriftSqlType.string,
@@ -3296,11 +3726,11 @@ class $AbilitiesTable extends Abilities
           data['${effectivePrefix}rank_required'],
         )!,
       ),
-      aspectType: $AbilitiesTable.$converteraspectType.fromSql(
+      aspectType: $AbilitiesTable.$converteraspectTypen.fromSql(
         attachedDatabase.typeMapping.read(
           DriftSqlType.string,
           data['${effectivePrefix}aspect_type'],
-        )!,
+        ),
       ),
     );
   }
@@ -3314,32 +3744,36 @@ class $AbilitiesTable extends Abilities
       const CharacterRankConverter();
   static TypeConverter<AspectType, String> $converteraspectType =
       const AspectTypeConverter();
+  static TypeConverter<AspectType?, String?> $converteraspectTypen =
+      NullAwareTypeConverter.wrap($converteraspectType);
 }
 
 class AbilityData extends DataClass implements Insertable<AbilityData> {
   final String id;
-  final String characterId;
+  final String? characterId;
   final String name;
   final String? description;
   final int manaCost;
   final int cooldown;
   final CharacterRank rankRequired;
-  final AspectType aspectType;
+  final AspectType? aspectType;
   const AbilityData({
     required this.id,
-    required this.characterId,
+    this.characterId,
     required this.name,
     this.description,
     required this.manaCost,
     required this.cooldown,
     required this.rankRequired,
-    required this.aspectType,
+    this.aspectType,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<String>(id);
-    map['character_id'] = Variable<String>(characterId);
+    if (!nullToAbsent || characterId != null) {
+      map['character_id'] = Variable<String>(characterId);
+    }
     map['name'] = Variable<String>(name);
     if (!nullToAbsent || description != null) {
       map['description'] = Variable<String>(description);
@@ -3351,9 +3785,9 @@ class AbilityData extends DataClass implements Insertable<AbilityData> {
         $AbilitiesTable.$converterrankRequired.toSql(rankRequired),
       );
     }
-    {
+    if (!nullToAbsent || aspectType != null) {
       map['aspect_type'] = Variable<String>(
-        $AbilitiesTable.$converteraspectType.toSql(aspectType),
+        $AbilitiesTable.$converteraspectTypen.toSql(aspectType),
       );
     }
     return map;
@@ -3362,7 +3796,10 @@ class AbilityData extends DataClass implements Insertable<AbilityData> {
   AbilitiesCompanion toCompanion(bool nullToAbsent) {
     return AbilitiesCompanion(
       id: Value(id),
-      characterId: Value(characterId),
+      characterId:
+          characterId == null && nullToAbsent
+              ? const Value.absent()
+              : Value(characterId),
       name: Value(name),
       description:
           description == null && nullToAbsent
@@ -3371,7 +3808,10 @@ class AbilityData extends DataClass implements Insertable<AbilityData> {
       manaCost: Value(manaCost),
       cooldown: Value(cooldown),
       rankRequired: Value(rankRequired),
-      aspectType: Value(aspectType),
+      aspectType:
+          aspectType == null && nullToAbsent
+              ? const Value.absent()
+              : Value(aspectType),
     );
   }
 
@@ -3382,13 +3822,13 @@ class AbilityData extends DataClass implements Insertable<AbilityData> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return AbilityData(
       id: serializer.fromJson<String>(json['id']),
-      characterId: serializer.fromJson<String>(json['characterId']),
+      characterId: serializer.fromJson<String?>(json['characterId']),
       name: serializer.fromJson<String>(json['name']),
       description: serializer.fromJson<String?>(json['description']),
       manaCost: serializer.fromJson<int>(json['manaCost']),
       cooldown: serializer.fromJson<int>(json['cooldown']),
       rankRequired: serializer.fromJson<CharacterRank>(json['rankRequired']),
-      aspectType: serializer.fromJson<AspectType>(json['aspectType']),
+      aspectType: serializer.fromJson<AspectType?>(json['aspectType']),
     );
   }
   @override
@@ -3396,34 +3836,34 @@ class AbilityData extends DataClass implements Insertable<AbilityData> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<String>(id),
-      'characterId': serializer.toJson<String>(characterId),
+      'characterId': serializer.toJson<String?>(characterId),
       'name': serializer.toJson<String>(name),
       'description': serializer.toJson<String?>(description),
       'manaCost': serializer.toJson<int>(manaCost),
       'cooldown': serializer.toJson<int>(cooldown),
       'rankRequired': serializer.toJson<CharacterRank>(rankRequired),
-      'aspectType': serializer.toJson<AspectType>(aspectType),
+      'aspectType': serializer.toJson<AspectType?>(aspectType),
     };
   }
 
   AbilityData copyWith({
     String? id,
-    String? characterId,
+    Value<String?> characterId = const Value.absent(),
     String? name,
     Value<String?> description = const Value.absent(),
     int? manaCost,
     int? cooldown,
     CharacterRank? rankRequired,
-    AspectType? aspectType,
+    Value<AspectType?> aspectType = const Value.absent(),
   }) => AbilityData(
     id: id ?? this.id,
-    characterId: characterId ?? this.characterId,
+    characterId: characterId.present ? characterId.value : this.characterId,
     name: name ?? this.name,
     description: description.present ? description.value : this.description,
     manaCost: manaCost ?? this.manaCost,
     cooldown: cooldown ?? this.cooldown,
     rankRequired: rankRequired ?? this.rankRequired,
-    aspectType: aspectType ?? this.aspectType,
+    aspectType: aspectType.present ? aspectType.value : this.aspectType,
   );
   AbilityData copyWithCompanion(AbilitiesCompanion data) {
     return AbilityData(
@@ -3486,13 +3926,13 @@ class AbilityData extends DataClass implements Insertable<AbilityData> {
 
 class AbilitiesCompanion extends UpdateCompanion<AbilityData> {
   final Value<String> id;
-  final Value<String> characterId;
+  final Value<String?> characterId;
   final Value<String> name;
   final Value<String?> description;
   final Value<int> manaCost;
   final Value<int> cooldown;
   final Value<CharacterRank> rankRequired;
-  final Value<AspectType> aspectType;
+  final Value<AspectType?> aspectType;
   final Value<int> rowid;
   const AbilitiesCompanion({
     this.id = const Value.absent(),
@@ -3507,18 +3947,16 @@ class AbilitiesCompanion extends UpdateCompanion<AbilityData> {
   });
   AbilitiesCompanion.insert({
     this.id = const Value.absent(),
-    required String characterId,
+    this.characterId = const Value.absent(),
     required String name,
     this.description = const Value.absent(),
     this.manaCost = const Value.absent(),
     this.cooldown = const Value.absent(),
     required CharacterRank rankRequired,
-    required AspectType aspectType,
+    this.aspectType = const Value.absent(),
     this.rowid = const Value.absent(),
-  }) : characterId = Value(characterId),
-       name = Value(name),
-       rankRequired = Value(rankRequired),
-       aspectType = Value(aspectType);
+  }) : name = Value(name),
+       rankRequired = Value(rankRequired);
   static Insertable<AbilityData> custom({
     Expression<String>? id,
     Expression<String>? characterId,
@@ -3545,13 +3983,13 @@ class AbilitiesCompanion extends UpdateCompanion<AbilityData> {
 
   AbilitiesCompanion copyWith({
     Value<String>? id,
-    Value<String>? characterId,
+    Value<String?>? characterId,
     Value<String>? name,
     Value<String?>? description,
     Value<int>? manaCost,
     Value<int>? cooldown,
     Value<CharacterRank>? rankRequired,
-    Value<AspectType>? aspectType,
+    Value<AspectType?>? aspectType,
     Value<int>? rowid,
   }) {
     return AbilitiesCompanion(
@@ -3595,7 +4033,7 @@ class AbilitiesCompanion extends UpdateCompanion<AbilityData> {
     }
     if (aspectType.present) {
       map['aspect_type'] = Variable<String>(
-        $AbilitiesTable.$converteraspectType.toSql(aspectType.value),
+        $AbilitiesTable.$converteraspectTypen.toSql(aspectType.value),
       );
     }
     if (rowid.present) {
@@ -4555,6 +4993,771 @@ class CharacterTraitsCompanion extends UpdateCompanion<CharacterTraitData> {
   }
 }
 
+class $PowersTable extends Powers with TableInfo<$PowersTable, PowerData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PowersTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    clientDefault: () => uuid.v4(),
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 100,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _descriptionMeta = const VerificationMeta(
+    'description',
+  );
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+    'description',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _sourceTypeMeta = const VerificationMeta(
+    'sourceType',
+  );
+  @override
+  late final GeneratedColumn<String> sourceType = GeneratedColumn<String>(
+    'source_type',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _manaCostMeta = const VerificationMeta(
+    'manaCost',
+  );
+  @override
+  late final GeneratedColumn<int> manaCost = GeneratedColumn<int>(
+    'mana_cost',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _cooldownMeta = const VerificationMeta(
+    'cooldown',
+  );
+  @override
+  late final GeneratedColumn<int> cooldown = GeneratedColumn<int>(
+    'cooldown',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<CharacterRank?, String>
+  rankRequired = GeneratedColumn<String>(
+    'rank_required',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  ).withConverter<CharacterRank?>($PowersTable.$converterrankRequiredn);
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    name,
+    description,
+    sourceType,
+    manaCost,
+    cooldown,
+    rankRequired,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'powers';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<PowerData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+        _descriptionMeta,
+        description.isAcceptableOrUnknown(
+          data['description']!,
+          _descriptionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('source_type')) {
+      context.handle(
+        _sourceTypeMeta,
+        sourceType.isAcceptableOrUnknown(data['source_type']!, _sourceTypeMeta),
+      );
+    }
+    if (data.containsKey('mana_cost')) {
+      context.handle(
+        _manaCostMeta,
+        manaCost.isAcceptableOrUnknown(data['mana_cost']!, _manaCostMeta),
+      );
+    }
+    if (data.containsKey('cooldown')) {
+      context.handle(
+        _cooldownMeta,
+        cooldown.isAcceptableOrUnknown(data['cooldown']!, _cooldownMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  PowerData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return PowerData(
+      id:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}id'],
+          )!,
+      name:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}name'],
+          )!,
+      description: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}description'],
+      ),
+      sourceType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source_type'],
+      ),
+      manaCost:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}mana_cost'],
+          )!,
+      cooldown:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}cooldown'],
+          )!,
+      rankRequired: $PowersTable.$converterrankRequiredn.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}rank_required'],
+        ),
+      ),
+    );
+  }
+
+  @override
+  $PowersTable createAlias(String alias) {
+    return $PowersTable(attachedDatabase, alias);
+  }
+
+  static TypeConverter<CharacterRank, String> $converterrankRequired =
+      const CharacterRankConverter();
+  static TypeConverter<CharacterRank?, String?> $converterrankRequiredn =
+      NullAwareTypeConverter.wrap($converterrankRequired);
+}
+
+class PowerData extends DataClass implements Insertable<PowerData> {
+  final String id;
+  final String name;
+  final String? description;
+  final String? sourceType;
+  final int manaCost;
+  final int cooldown;
+  final CharacterRank? rankRequired;
+  const PowerData({
+    required this.id,
+    required this.name,
+    this.description,
+    this.sourceType,
+    required this.manaCost,
+    required this.cooldown,
+    this.rankRequired,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['name'] = Variable<String>(name);
+    if (!nullToAbsent || description != null) {
+      map['description'] = Variable<String>(description);
+    }
+    if (!nullToAbsent || sourceType != null) {
+      map['source_type'] = Variable<String>(sourceType);
+    }
+    map['mana_cost'] = Variable<int>(manaCost);
+    map['cooldown'] = Variable<int>(cooldown);
+    if (!nullToAbsent || rankRequired != null) {
+      map['rank_required'] = Variable<String>(
+        $PowersTable.$converterrankRequiredn.toSql(rankRequired),
+      );
+    }
+    return map;
+  }
+
+  PowersCompanion toCompanion(bool nullToAbsent) {
+    return PowersCompanion(
+      id: Value(id),
+      name: Value(name),
+      description:
+          description == null && nullToAbsent
+              ? const Value.absent()
+              : Value(description),
+      sourceType:
+          sourceType == null && nullToAbsent
+              ? const Value.absent()
+              : Value(sourceType),
+      manaCost: Value(manaCost),
+      cooldown: Value(cooldown),
+      rankRequired:
+          rankRequired == null && nullToAbsent
+              ? const Value.absent()
+              : Value(rankRequired),
+    );
+  }
+
+  factory PowerData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return PowerData(
+      id: serializer.fromJson<String>(json['id']),
+      name: serializer.fromJson<String>(json['name']),
+      description: serializer.fromJson<String?>(json['description']),
+      sourceType: serializer.fromJson<String?>(json['sourceType']),
+      manaCost: serializer.fromJson<int>(json['manaCost']),
+      cooldown: serializer.fromJson<int>(json['cooldown']),
+      rankRequired: serializer.fromJson<CharacterRank?>(json['rankRequired']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'name': serializer.toJson<String>(name),
+      'description': serializer.toJson<String?>(description),
+      'sourceType': serializer.toJson<String?>(sourceType),
+      'manaCost': serializer.toJson<int>(manaCost),
+      'cooldown': serializer.toJson<int>(cooldown),
+      'rankRequired': serializer.toJson<CharacterRank?>(rankRequired),
+    };
+  }
+
+  PowerData copyWith({
+    String? id,
+    String? name,
+    Value<String?> description = const Value.absent(),
+    Value<String?> sourceType = const Value.absent(),
+    int? manaCost,
+    int? cooldown,
+    Value<CharacterRank?> rankRequired = const Value.absent(),
+  }) => PowerData(
+    id: id ?? this.id,
+    name: name ?? this.name,
+    description: description.present ? description.value : this.description,
+    sourceType: sourceType.present ? sourceType.value : this.sourceType,
+    manaCost: manaCost ?? this.manaCost,
+    cooldown: cooldown ?? this.cooldown,
+    rankRequired: rankRequired.present ? rankRequired.value : this.rankRequired,
+  );
+  PowerData copyWithCompanion(PowersCompanion data) {
+    return PowerData(
+      id: data.id.present ? data.id.value : this.id,
+      name: data.name.present ? data.name.value : this.name,
+      description:
+          data.description.present ? data.description.value : this.description,
+      sourceType:
+          data.sourceType.present ? data.sourceType.value : this.sourceType,
+      manaCost: data.manaCost.present ? data.manaCost.value : this.manaCost,
+      cooldown: data.cooldown.present ? data.cooldown.value : this.cooldown,
+      rankRequired:
+          data.rankRequired.present
+              ? data.rankRequired.value
+              : this.rankRequired,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PowerData(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('description: $description, ')
+          ..write('sourceType: $sourceType, ')
+          ..write('manaCost: $manaCost, ')
+          ..write('cooldown: $cooldown, ')
+          ..write('rankRequired: $rankRequired')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    name,
+    description,
+    sourceType,
+    manaCost,
+    cooldown,
+    rankRequired,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PowerData &&
+          other.id == this.id &&
+          other.name == this.name &&
+          other.description == this.description &&
+          other.sourceType == this.sourceType &&
+          other.manaCost == this.manaCost &&
+          other.cooldown == this.cooldown &&
+          other.rankRequired == this.rankRequired);
+}
+
+class PowersCompanion extends UpdateCompanion<PowerData> {
+  final Value<String> id;
+  final Value<String> name;
+  final Value<String?> description;
+  final Value<String?> sourceType;
+  final Value<int> manaCost;
+  final Value<int> cooldown;
+  final Value<CharacterRank?> rankRequired;
+  final Value<int> rowid;
+  const PowersCompanion({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.description = const Value.absent(),
+    this.sourceType = const Value.absent(),
+    this.manaCost = const Value.absent(),
+    this.cooldown = const Value.absent(),
+    this.rankRequired = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  PowersCompanion.insert({
+    this.id = const Value.absent(),
+    required String name,
+    this.description = const Value.absent(),
+    this.sourceType = const Value.absent(),
+    this.manaCost = const Value.absent(),
+    this.cooldown = const Value.absent(),
+    this.rankRequired = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : name = Value(name);
+  static Insertable<PowerData> custom({
+    Expression<String>? id,
+    Expression<String>? name,
+    Expression<String>? description,
+    Expression<String>? sourceType,
+    Expression<int>? manaCost,
+    Expression<int>? cooldown,
+    Expression<String>? rankRequired,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (name != null) 'name': name,
+      if (description != null) 'description': description,
+      if (sourceType != null) 'source_type': sourceType,
+      if (manaCost != null) 'mana_cost': manaCost,
+      if (cooldown != null) 'cooldown': cooldown,
+      if (rankRequired != null) 'rank_required': rankRequired,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  PowersCompanion copyWith({
+    Value<String>? id,
+    Value<String>? name,
+    Value<String?>? description,
+    Value<String?>? sourceType,
+    Value<int>? manaCost,
+    Value<int>? cooldown,
+    Value<CharacterRank?>? rankRequired,
+    Value<int>? rowid,
+  }) {
+    return PowersCompanion(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      description: description ?? this.description,
+      sourceType: sourceType ?? this.sourceType,
+      manaCost: manaCost ?? this.manaCost,
+      cooldown: cooldown ?? this.cooldown,
+      rankRequired: rankRequired ?? this.rankRequired,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
+    if (sourceType.present) {
+      map['source_type'] = Variable<String>(sourceType.value);
+    }
+    if (manaCost.present) {
+      map['mana_cost'] = Variable<int>(manaCost.value);
+    }
+    if (cooldown.present) {
+      map['cooldown'] = Variable<int>(cooldown.value);
+    }
+    if (rankRequired.present) {
+      map['rank_required'] = Variable<String>(
+        $PowersTable.$converterrankRequiredn.toSql(rankRequired.value),
+      );
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PowersCompanion(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('description: $description, ')
+          ..write('sourceType: $sourceType, ')
+          ..write('manaCost: $manaCost, ')
+          ..write('cooldown: $cooldown, ')
+          ..write('rankRequired: $rankRequired, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $CharacterPowersTable extends CharacterPowers
+    with TableInfo<$CharacterPowersTable, CharacterPowerData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CharacterPowersTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _characterIdMeta = const VerificationMeta(
+    'characterId',
+  );
+  @override
+  late final GeneratedColumn<String> characterId = GeneratedColumn<String>(
+    'character_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES characters (id)',
+    ),
+  );
+  static const VerificationMeta _powerIdMeta = const VerificationMeta(
+    'powerId',
+  );
+  @override
+  late final GeneratedColumn<String> powerId = GeneratedColumn<String>(
+    'power_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES powers (id)',
+    ),
+  );
+  static const VerificationMeta _isEquippedMeta = const VerificationMeta(
+    'isEquipped',
+  );
+  @override
+  late final GeneratedColumn<bool> isEquipped = GeneratedColumn<bool>(
+    'is_equipped',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_equipped" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [characterId, powerId, isEquipped];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'character_powers';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<CharacterPowerData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('character_id')) {
+      context.handle(
+        _characterIdMeta,
+        characterId.isAcceptableOrUnknown(
+          data['character_id']!,
+          _characterIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_characterIdMeta);
+    }
+    if (data.containsKey('power_id')) {
+      context.handle(
+        _powerIdMeta,
+        powerId.isAcceptableOrUnknown(data['power_id']!, _powerIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_powerIdMeta);
+    }
+    if (data.containsKey('is_equipped')) {
+      context.handle(
+        _isEquippedMeta,
+        isEquipped.isAcceptableOrUnknown(data['is_equipped']!, _isEquippedMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {characterId, powerId};
+  @override
+  CharacterPowerData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CharacterPowerData(
+      characterId:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}character_id'],
+          )!,
+      powerId:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.string,
+            data['${effectivePrefix}power_id'],
+          )!,
+      isEquipped:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.bool,
+            data['${effectivePrefix}is_equipped'],
+          )!,
+    );
+  }
+
+  @override
+  $CharacterPowersTable createAlias(String alias) {
+    return $CharacterPowersTable(attachedDatabase, alias);
+  }
+}
+
+class CharacterPowerData extends DataClass
+    implements Insertable<CharacterPowerData> {
+  final String characterId;
+  final String powerId;
+  final bool isEquipped;
+  const CharacterPowerData({
+    required this.characterId,
+    required this.powerId,
+    required this.isEquipped,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['character_id'] = Variable<String>(characterId);
+    map['power_id'] = Variable<String>(powerId);
+    map['is_equipped'] = Variable<bool>(isEquipped);
+    return map;
+  }
+
+  CharacterPowersCompanion toCompanion(bool nullToAbsent) {
+    return CharacterPowersCompanion(
+      characterId: Value(characterId),
+      powerId: Value(powerId),
+      isEquipped: Value(isEquipped),
+    );
+  }
+
+  factory CharacterPowerData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CharacterPowerData(
+      characterId: serializer.fromJson<String>(json['characterId']),
+      powerId: serializer.fromJson<String>(json['powerId']),
+      isEquipped: serializer.fromJson<bool>(json['isEquipped']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'characterId': serializer.toJson<String>(characterId),
+      'powerId': serializer.toJson<String>(powerId),
+      'isEquipped': serializer.toJson<bool>(isEquipped),
+    };
+  }
+
+  CharacterPowerData copyWith({
+    String? characterId,
+    String? powerId,
+    bool? isEquipped,
+  }) => CharacterPowerData(
+    characterId: characterId ?? this.characterId,
+    powerId: powerId ?? this.powerId,
+    isEquipped: isEquipped ?? this.isEquipped,
+  );
+  CharacterPowerData copyWithCompanion(CharacterPowersCompanion data) {
+    return CharacterPowerData(
+      characterId:
+          data.characterId.present ? data.characterId.value : this.characterId,
+      powerId: data.powerId.present ? data.powerId.value : this.powerId,
+      isEquipped:
+          data.isEquipped.present ? data.isEquipped.value : this.isEquipped,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CharacterPowerData(')
+          ..write('characterId: $characterId, ')
+          ..write('powerId: $powerId, ')
+          ..write('isEquipped: $isEquipped')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(characterId, powerId, isEquipped);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CharacterPowerData &&
+          other.characterId == this.characterId &&
+          other.powerId == this.powerId &&
+          other.isEquipped == this.isEquipped);
+}
+
+class CharacterPowersCompanion extends UpdateCompanion<CharacterPowerData> {
+  final Value<String> characterId;
+  final Value<String> powerId;
+  final Value<bool> isEquipped;
+  final Value<int> rowid;
+  const CharacterPowersCompanion({
+    this.characterId = const Value.absent(),
+    this.powerId = const Value.absent(),
+    this.isEquipped = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  CharacterPowersCompanion.insert({
+    required String characterId,
+    required String powerId,
+    this.isEquipped = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : characterId = Value(characterId),
+       powerId = Value(powerId);
+  static Insertable<CharacterPowerData> custom({
+    Expression<String>? characterId,
+    Expression<String>? powerId,
+    Expression<bool>? isEquipped,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (characterId != null) 'character_id': characterId,
+      if (powerId != null) 'power_id': powerId,
+      if (isEquipped != null) 'is_equipped': isEquipped,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  CharacterPowersCompanion copyWith({
+    Value<String>? characterId,
+    Value<String>? powerId,
+    Value<bool>? isEquipped,
+    Value<int>? rowid,
+  }) {
+    return CharacterPowersCompanion(
+      characterId: characterId ?? this.characterId,
+      powerId: powerId ?? this.powerId,
+      isEquipped: isEquipped ?? this.isEquipped,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (characterId.present) {
+      map['character_id'] = Variable<String>(characterId.value);
+    }
+    if (powerId.present) {
+      map['power_id'] = Variable<String>(powerId.value);
+    }
+    if (isEquipped.present) {
+      map['is_equipped'] = Variable<bool>(isEquipped.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CharacterPowersCompanion(')
+          ..write('characterId: $characterId, ')
+          ..write('powerId: $powerId, ')
+          ..write('isEquipped: $isEquipped, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -4564,14 +5767,17 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   );
   late final $MajorEventChoicesTable majorEventChoices =
       $MajorEventChoicesTable(this);
-  late final $DarkAwakeningChoicesTable darkAwakeningChoices =
-      $DarkAwakeningChoicesTable(this);
+  late final $AdultChoicesTable adultChoices = $AdultChoicesTable(this);
   late final $CharactersTable characters = $CharactersTable(this);
   late final $AbilitiesTable abilities = $AbilitiesTable(this);
   late final $MemoriesTable memories = $MemoriesTable(this);
   late final $CharacterMemoriesTable characterMemories =
       $CharacterMemoriesTable(this);
   late final $CharacterTraitsTable characterTraits = $CharacterTraitsTable(
+    this,
+  );
+  late final $PowersTable powers = $PowersTable(this);
+  late final $CharacterPowersTable characterPowers = $CharacterPowersTable(
     this,
   );
   @override
@@ -4582,12 +5788,14 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     traits,
     childhoodChoices,
     majorEventChoices,
-    darkAwakeningChoices,
+    adultChoices,
     characters,
     abilities,
     memories,
     characterMemories,
     characterTraits,
+    powers,
+    characterPowers,
   ];
 }
 
@@ -4596,6 +5804,8 @@ typedef $$TraitsTableCreateCompanionBuilder =
       Value<String> id,
       required String name,
       Value<String?> description,
+      Value<bool> isStrength,
+      Value<bool> isWeakness,
       Value<int> rowid,
     });
 typedef $$TraitsTableUpdateCompanionBuilder =
@@ -4603,6 +5813,8 @@ typedef $$TraitsTableUpdateCompanionBuilder =
       Value<String> id,
       Value<String> name,
       Value<String?> description,
+      Value<bool> isStrength,
+      Value<bool> isWeakness,
       Value<int> rowid,
     });
 
@@ -4657,29 +5869,19 @@ final class $$TraitsTableReferences
     );
   }
 
-  static MultiTypedResultKey<
-    $DarkAwakeningChoicesTable,
-    List<DarkAwakeningChoiceData>
-  >
-  _darkAwakeningChoicesRefsTable(_$AppDatabase db) =>
-      MultiTypedResultKey.fromTable(
-        db.darkAwakeningChoices,
-        aliasName: $_aliasNameGenerator(
-          db.traits.id,
-          db.darkAwakeningChoices.traitId,
-        ),
-      );
+  static MultiTypedResultKey<$AdultChoicesTable, List<AdultChoiceData>>
+  _adultChoicesRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.adultChoices,
+    aliasName: $_aliasNameGenerator(db.traits.id, db.adultChoices.traitId),
+  );
 
-  $$DarkAwakeningChoicesTableProcessedTableManager
-  get darkAwakeningChoicesRefs {
-    final manager = $$DarkAwakeningChoicesTableTableManager(
+  $$AdultChoicesTableProcessedTableManager get adultChoicesRefs {
+    final manager = $$AdultChoicesTableTableManager(
       $_db,
-      $_db.darkAwakeningChoices,
+      $_db.adultChoices,
     ).filter((f) => f.traitId.id.sqlEquals($_itemColumn<String>('id')!));
 
-    final cache = $_typedResult.readTableOrNull(
-      _darkAwakeningChoicesRefsTable($_db),
-    );
+    final cache = $_typedResult.readTableOrNull(_adultChoicesRefsTable($_db));
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
     );
@@ -4727,6 +5929,16 @@ class $$TraitsTableFilterComposer
 
   ColumnFilters<String> get description => $composableBuilder(
     column: $table.description,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isStrength => $composableBuilder(
+    column: $table.isStrength,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isWeakness => $composableBuilder(
+    column: $table.isWeakness,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -4780,22 +5992,22 @@ class $$TraitsTableFilterComposer
     return f(composer);
   }
 
-  Expression<bool> darkAwakeningChoicesRefs(
-    Expression<bool> Function($$DarkAwakeningChoicesTableFilterComposer f) f,
+  Expression<bool> adultChoicesRefs(
+    Expression<bool> Function($$AdultChoicesTableFilterComposer f) f,
   ) {
-    final $$DarkAwakeningChoicesTableFilterComposer composer = $composerBuilder(
+    final $$AdultChoicesTableFilterComposer composer = $composerBuilder(
       composer: this,
       getCurrentColumn: (t) => t.id,
-      referencedTable: $db.darkAwakeningChoices,
+      referencedTable: $db.adultChoices,
       getReferencedColumn: (t) => t.traitId,
       builder:
           (
             joinBuilder, {
             $addJoinBuilderToRootComposer,
             $removeJoinBuilderFromRootComposer,
-          }) => $$DarkAwakeningChoicesTableFilterComposer(
+          }) => $$AdultChoicesTableFilterComposer(
             $db: $db,
-            $table: $db.darkAwakeningChoices,
+            $table: $db.adultChoices,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -4854,6 +6066,16 @@ class $$TraitsTableOrderingComposer
     column: $table.description,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<bool> get isStrength => $composableBuilder(
+    column: $table.isStrength,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isWeakness => $composableBuilder(
+    column: $table.isWeakness,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$TraitsTableAnnotationComposer
@@ -4873,6 +6095,16 @@ class $$TraitsTableAnnotationComposer
 
   GeneratedColumn<String> get description => $composableBuilder(
     column: $table.description,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isStrength => $composableBuilder(
+    column: $table.isStrength,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get isWeakness => $composableBuilder(
+    column: $table.isWeakness,
     builder: (column) => column,
   );
 
@@ -4927,29 +6159,28 @@ class $$TraitsTableAnnotationComposer
     return f(composer);
   }
 
-  Expression<T> darkAwakeningChoicesRefs<T extends Object>(
-    Expression<T> Function($$DarkAwakeningChoicesTableAnnotationComposer a) f,
+  Expression<T> adultChoicesRefs<T extends Object>(
+    Expression<T> Function($$AdultChoicesTableAnnotationComposer a) f,
   ) {
-    final $$DarkAwakeningChoicesTableAnnotationComposer composer =
-        $composerBuilder(
-          composer: this,
-          getCurrentColumn: (t) => t.id,
-          referencedTable: $db.darkAwakeningChoices,
-          getReferencedColumn: (t) => t.traitId,
-          builder:
-              (
-                joinBuilder, {
-                $addJoinBuilderToRootComposer,
+    final $$AdultChoicesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.adultChoices,
+      getReferencedColumn: (t) => t.traitId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$AdultChoicesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.adultChoices,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
                 $removeJoinBuilderFromRootComposer,
-              }) => $$DarkAwakeningChoicesTableAnnotationComposer(
-                $db: $db,
-                $table: $db.darkAwakeningChoices,
-                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-                joinBuilder: joinBuilder,
-                $removeJoinBuilderFromRootComposer:
-                    $removeJoinBuilderFromRootComposer,
-              ),
-        );
+          ),
+    );
     return f(composer);
   }
 
@@ -4995,7 +6226,7 @@ class $$TraitsTableTableManager
           PrefetchHooks Function({
             bool childhoodChoicesRefs,
             bool majorEventChoicesRefs,
-            bool darkAwakeningChoicesRefs,
+            bool adultChoicesRefs,
             bool characterTraitsRefs,
           })
         > {
@@ -5015,11 +6246,15 @@ class $$TraitsTableTableManager
                 Value<String> id = const Value.absent(),
                 Value<String> name = const Value.absent(),
                 Value<String?> description = const Value.absent(),
+                Value<bool> isStrength = const Value.absent(),
+                Value<bool> isWeakness = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => TraitsCompanion(
                 id: id,
                 name: name,
                 description: description,
+                isStrength: isStrength,
+                isWeakness: isWeakness,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -5027,11 +6262,15 @@ class $$TraitsTableTableManager
                 Value<String> id = const Value.absent(),
                 required String name,
                 Value<String?> description = const Value.absent(),
+                Value<bool> isStrength = const Value.absent(),
+                Value<bool> isWeakness = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => TraitsCompanion.insert(
                 id: id,
                 name: name,
                 description: description,
+                isStrength: isStrength,
+                isWeakness: isWeakness,
                 rowid: rowid,
               ),
           withReferenceMapper:
@@ -5047,7 +6286,7 @@ class $$TraitsTableTableManager
           prefetchHooksCallback: ({
             childhoodChoicesRefs = false,
             majorEventChoicesRefs = false,
-            darkAwakeningChoicesRefs = false,
+            adultChoicesRefs = false,
             characterTraitsRefs = false,
           }) {
             return PrefetchHooks(
@@ -5055,7 +6294,7 @@ class $$TraitsTableTableManager
               explicitlyWatchedTables: [
                 if (childhoodChoicesRefs) db.childhoodChoices,
                 if (majorEventChoicesRefs) db.majorEventChoices,
-                if (darkAwakeningChoicesRefs) db.darkAwakeningChoices,
+                if (adultChoicesRefs) db.adultChoices,
                 if (characterTraitsRefs) db.characterTraits,
               ],
               addJoins: null,
@@ -5105,22 +6344,22 @@ class $$TraitsTableTableManager
                           ),
                       typedResults: items,
                     ),
-                  if (darkAwakeningChoicesRefs)
+                  if (adultChoicesRefs)
                     await $_getPrefetchedData<
                       TraitData,
                       $TraitsTable,
-                      DarkAwakeningChoiceData
+                      AdultChoiceData
                     >(
                       currentTable: table,
                       referencedTable: $$TraitsTableReferences
-                          ._darkAwakeningChoicesRefsTable(db),
+                          ._adultChoicesRefsTable(db),
                       managerFromTypedResult:
                           (p0) =>
                               $$TraitsTableReferences(
                                 db,
                                 table,
                                 p0,
-                              ).darkAwakeningChoicesRefs,
+                              ).adultChoicesRefs,
                       referencedItemsForCurrentItem:
                           (item, referencedItems) => referencedItems.where(
                             (e) => e.traitId == item.id,
@@ -5172,7 +6411,7 @@ typedef $$TraitsTableProcessedTableManager =
       PrefetchHooks Function({
         bool childhoodChoicesRefs,
         bool majorEventChoicesRefs,
-        bool darkAwakeningChoicesRefs,
+        bool adultChoicesRefs,
         bool characterTraitsRefs,
       })
     >;
@@ -6178,8 +7417,8 @@ typedef $$MajorEventChoicesTableProcessedTableManager =
       MajorEventChoiceData,
       PrefetchHooks Function({bool traitId, bool charactersRefs})
     >;
-typedef $$DarkAwakeningChoicesTableCreateCompanionBuilder =
-    DarkAwakeningChoicesCompanion Function({
+typedef $$AdultChoicesTableCreateCompanionBuilder =
+    AdultChoicesCompanion Function({
       Value<String> id,
       required String description,
       Value<String?> traitId,
@@ -6191,8 +7430,8 @@ typedef $$DarkAwakeningChoicesTableCreateCompanionBuilder =
       Value<AspectType?> aspectType,
       Value<int> rowid,
     });
-typedef $$DarkAwakeningChoicesTableUpdateCompanionBuilder =
-    DarkAwakeningChoicesCompanion Function({
+typedef $$AdultChoicesTableUpdateCompanionBuilder =
+    AdultChoicesCompanion Function({
       Value<String> id,
       Value<String> description,
       Value<String?> traitId,
@@ -6205,21 +7444,12 @@ typedef $$DarkAwakeningChoicesTableUpdateCompanionBuilder =
       Value<int> rowid,
     });
 
-final class $$DarkAwakeningChoicesTableReferences
-    extends
-        BaseReferences<
-          _$AppDatabase,
-          $DarkAwakeningChoicesTable,
-          DarkAwakeningChoiceData
-        > {
-  $$DarkAwakeningChoicesTableReferences(
-    super.$_db,
-    super.$_table,
-    super.$_typedResult,
-  );
+final class $$AdultChoicesTableReferences
+    extends BaseReferences<_$AppDatabase, $AdultChoicesTable, AdultChoiceData> {
+  $$AdultChoicesTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
   static $TraitsTable _traitIdTable(_$AppDatabase db) => db.traits.createAlias(
-    $_aliasNameGenerator(db.darkAwakeningChoices.traitId, db.traits.id),
+    $_aliasNameGenerator(db.adultChoices.traitId, db.traits.id),
   );
 
   $$TraitsTableProcessedTableManager? get traitId {
@@ -6240,15 +7470,16 @@ final class $$DarkAwakeningChoicesTableReferences
   _charactersRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
     db.characters,
     aliasName: $_aliasNameGenerator(
-      db.darkAwakeningChoices.id,
-      db.characters.darkAwakeningChoiceId,
+      db.adultChoices.id,
+      db.characters.adultChoiceId,
     ),
   );
 
   $$CharactersTableProcessedTableManager get charactersRefs {
-    final manager = $$CharactersTableTableManager($_db, $_db.characters).filter(
-      (f) => f.darkAwakeningChoiceId.id.sqlEquals($_itemColumn<String>('id')!),
-    );
+    final manager = $$CharactersTableTableManager(
+      $_db,
+      $_db.characters,
+    ).filter((f) => f.adultChoiceId.id.sqlEquals($_itemColumn<String>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_charactersRefsTable($_db));
     return ProcessedTableManager(
@@ -6257,9 +7488,9 @@ final class $$DarkAwakeningChoicesTableReferences
   }
 }
 
-class $$DarkAwakeningChoicesTableFilterComposer
-    extends Composer<_$AppDatabase, $DarkAwakeningChoicesTable> {
-  $$DarkAwakeningChoicesTableFilterComposer({
+class $$AdultChoicesTableFilterComposer
+    extends Composer<_$AppDatabase, $AdultChoicesTable> {
+  $$AdultChoicesTableFilterComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -6337,7 +7568,7 @@ class $$DarkAwakeningChoicesTableFilterComposer
       composer: this,
       getCurrentColumn: (t) => t.id,
       referencedTable: $db.characters,
-      getReferencedColumn: (t) => t.darkAwakeningChoiceId,
+      getReferencedColumn: (t) => t.adultChoiceId,
       builder:
           (
             joinBuilder, {
@@ -6356,9 +7587,9 @@ class $$DarkAwakeningChoicesTableFilterComposer
   }
 }
 
-class $$DarkAwakeningChoicesTableOrderingComposer
-    extends Composer<_$AppDatabase, $DarkAwakeningChoicesTable> {
-  $$DarkAwakeningChoicesTableOrderingComposer({
+class $$AdultChoicesTableOrderingComposer
+    extends Composer<_$AppDatabase, $AdultChoicesTable> {
+  $$AdultChoicesTableOrderingComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -6429,9 +7660,9 @@ class $$DarkAwakeningChoicesTableOrderingComposer
   }
 }
 
-class $$DarkAwakeningChoicesTableAnnotationComposer
-    extends Composer<_$AppDatabase, $DarkAwakeningChoicesTable> {
-  $$DarkAwakeningChoicesTableAnnotationComposer({
+class $$AdultChoicesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $AdultChoicesTable> {
+  $$AdultChoicesTableAnnotationComposer({
     required super.$db,
     required super.$table,
     super.joinBuilder,
@@ -6507,7 +7738,7 @@ class $$DarkAwakeningChoicesTableAnnotationComposer
       composer: this,
       getCurrentColumn: (t) => t.id,
       referencedTable: $db.characters,
-      getReferencedColumn: (t) => t.darkAwakeningChoiceId,
+      getReferencedColumn: (t) => t.adultChoiceId,
       builder:
           (
             joinBuilder, {
@@ -6526,43 +7757,33 @@ class $$DarkAwakeningChoicesTableAnnotationComposer
   }
 }
 
-class $$DarkAwakeningChoicesTableTableManager
+class $$AdultChoicesTableTableManager
     extends
         RootTableManager<
           _$AppDatabase,
-          $DarkAwakeningChoicesTable,
-          DarkAwakeningChoiceData,
-          $$DarkAwakeningChoicesTableFilterComposer,
-          $$DarkAwakeningChoicesTableOrderingComposer,
-          $$DarkAwakeningChoicesTableAnnotationComposer,
-          $$DarkAwakeningChoicesTableCreateCompanionBuilder,
-          $$DarkAwakeningChoicesTableUpdateCompanionBuilder,
-          (DarkAwakeningChoiceData, $$DarkAwakeningChoicesTableReferences),
-          DarkAwakeningChoiceData,
+          $AdultChoicesTable,
+          AdultChoiceData,
+          $$AdultChoicesTableFilterComposer,
+          $$AdultChoicesTableOrderingComposer,
+          $$AdultChoicesTableAnnotationComposer,
+          $$AdultChoicesTableCreateCompanionBuilder,
+          $$AdultChoicesTableUpdateCompanionBuilder,
+          (AdultChoiceData, $$AdultChoicesTableReferences),
+          AdultChoiceData,
           PrefetchHooks Function({bool traitId, bool charactersRefs})
         > {
-  $$DarkAwakeningChoicesTableTableManager(
-    _$AppDatabase db,
-    $DarkAwakeningChoicesTable table,
-  ) : super(
+  $$AdultChoicesTableTableManager(_$AppDatabase db, $AdultChoicesTable table)
+    : super(
         TableManagerState(
           db: db,
           table: table,
           createFilteringComposer:
-              () => $$DarkAwakeningChoicesTableFilterComposer(
-                $db: db,
-                $table: table,
-              ),
+              () => $$AdultChoicesTableFilterComposer($db: db, $table: table),
           createOrderingComposer:
-              () => $$DarkAwakeningChoicesTableOrderingComposer(
-                $db: db,
-                $table: table,
-              ),
+              () => $$AdultChoicesTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer:
-              () => $$DarkAwakeningChoicesTableAnnotationComposer(
-                $db: db,
-                $table: table,
-              ),
+              () =>
+                  $$AdultChoicesTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<String> id = const Value.absent(),
@@ -6575,7 +7796,7 @@ class $$DarkAwakeningChoicesTableTableManager
                 Value<int> enduranceBonus = const Value.absent(),
                 Value<AspectType?> aspectType = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
-              }) => DarkAwakeningChoicesCompanion(
+              }) => AdultChoicesCompanion(
                 id: id,
                 description: description,
                 traitId: traitId,
@@ -6599,7 +7820,7 @@ class $$DarkAwakeningChoicesTableTableManager
                 Value<int> enduranceBonus = const Value.absent(),
                 Value<AspectType?> aspectType = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
-              }) => DarkAwakeningChoicesCompanion.insert(
+              }) => AdultChoicesCompanion.insert(
                 id: id,
                 description: description,
                 traitId: traitId,
@@ -6617,7 +7838,7 @@ class $$DarkAwakeningChoicesTableTableManager
                       .map(
                         (e) => (
                           e.readTable(table),
-                          $$DarkAwakeningChoicesTableReferences(db, table, e),
+                          $$AdultChoicesTableReferences(db, table, e),
                         ),
                       )
                       .toList(),
@@ -6645,11 +7866,10 @@ class $$DarkAwakeningChoicesTableTableManager
                       state.withJoin(
                             currentTable: table,
                             currentColumn: table.traitId,
-                            referencedTable:
-                                $$DarkAwakeningChoicesTableReferences
-                                    ._traitIdTable(db),
+                            referencedTable: $$AdultChoicesTableReferences
+                                ._traitIdTable(db),
                             referencedColumn:
-                                $$DarkAwakeningChoicesTableReferences
+                                $$AdultChoicesTableReferences
                                     ._traitIdTable(db)
                                     .id,
                           )
@@ -6662,23 +7882,23 @@ class $$DarkAwakeningChoicesTableTableManager
                 return [
                   if (charactersRefs)
                     await $_getPrefetchedData<
-                      DarkAwakeningChoiceData,
-                      $DarkAwakeningChoicesTable,
+                      AdultChoiceData,
+                      $AdultChoicesTable,
                       CharacterData
                     >(
                       currentTable: table,
-                      referencedTable: $$DarkAwakeningChoicesTableReferences
+                      referencedTable: $$AdultChoicesTableReferences
                           ._charactersRefsTable(db),
                       managerFromTypedResult:
                           (p0) =>
-                              $$DarkAwakeningChoicesTableReferences(
+                              $$AdultChoicesTableReferences(
                                 db,
                                 table,
                                 p0,
                               ).charactersRefs,
                       referencedItemsForCurrentItem:
                           (item, referencedItems) => referencedItems.where(
-                            (e) => e.darkAwakeningChoiceId == item.id,
+                            (e) => e.adultChoiceId == item.id,
                           ),
                       typedResults: items,
                     ),
@@ -6690,18 +7910,18 @@ class $$DarkAwakeningChoicesTableTableManager
       );
 }
 
-typedef $$DarkAwakeningChoicesTableProcessedTableManager =
+typedef $$AdultChoicesTableProcessedTableManager =
     ProcessedTableManager<
       _$AppDatabase,
-      $DarkAwakeningChoicesTable,
-      DarkAwakeningChoiceData,
-      $$DarkAwakeningChoicesTableFilterComposer,
-      $$DarkAwakeningChoicesTableOrderingComposer,
-      $$DarkAwakeningChoicesTableAnnotationComposer,
-      $$DarkAwakeningChoicesTableCreateCompanionBuilder,
-      $$DarkAwakeningChoicesTableUpdateCompanionBuilder,
-      (DarkAwakeningChoiceData, $$DarkAwakeningChoicesTableReferences),
-      DarkAwakeningChoiceData,
+      $AdultChoicesTable,
+      AdultChoiceData,
+      $$AdultChoicesTableFilterComposer,
+      $$AdultChoicesTableOrderingComposer,
+      $$AdultChoicesTableAnnotationComposer,
+      $$AdultChoicesTableCreateCompanionBuilder,
+      $$AdultChoicesTableUpdateCompanionBuilder,
+      (AdultChoiceData, $$AdultChoicesTableReferences),
+      AdultChoiceData,
       PrefetchHooks Function({bool traitId, bool charactersRefs})
     >;
 typedef $$CharactersTableCreateCompanionBuilder =
@@ -6724,7 +7944,13 @@ typedef $$CharactersTableCreateCompanionBuilder =
       Value<bool> abilitiesRevealed,
       Value<String?> childhoodChoiceId,
       Value<String?> majorEventChoiceId,
-      Value<String?> darkAwakeningChoiceId,
+      Value<String?> adultChoiceId,
+      Value<int> resistanceMental,
+      Value<int> resistanceSpiritual,
+      Value<int> resistanceElementalHeat,
+      Value<int> resistanceElementalCold,
+      Value<int> resistanceElementalPoison,
+      Value<int> resistancePhysical,
       Value<int> rowid,
     });
 typedef $$CharactersTableUpdateCompanionBuilder =
@@ -6747,7 +7973,13 @@ typedef $$CharactersTableUpdateCompanionBuilder =
       Value<bool> abilitiesRevealed,
       Value<String?> childhoodChoiceId,
       Value<String?> majorEventChoiceId,
-      Value<String?> darkAwakeningChoiceId,
+      Value<String?> adultChoiceId,
+      Value<int> resistanceMental,
+      Value<int> resistanceSpiritual,
+      Value<int> resistanceElementalHeat,
+      Value<int> resistanceElementalCold,
+      Value<int> resistanceElementalPoison,
+      Value<int> resistancePhysical,
       Value<int> rowid,
     });
 
@@ -6799,46 +8031,22 @@ final class $$CharactersTableReferences
     );
   }
 
-  static $DarkAwakeningChoicesTable _darkAwakeningChoiceIdTable(
-    _$AppDatabase db,
-  ) => db.darkAwakeningChoices.createAlias(
-    $_aliasNameGenerator(
-      db.characters.darkAwakeningChoiceId,
-      db.darkAwakeningChoices.id,
-    ),
-  );
+  static $AdultChoicesTable _adultChoiceIdTable(_$AppDatabase db) =>
+      db.adultChoices.createAlias(
+        $_aliasNameGenerator(db.characters.adultChoiceId, db.adultChoices.id),
+      );
 
-  $$DarkAwakeningChoicesTableProcessedTableManager? get darkAwakeningChoiceId {
-    final $_column = $_itemColumn<String>('dark_awakening_choice_id');
+  $$AdultChoicesTableProcessedTableManager? get adultChoiceId {
+    final $_column = $_itemColumn<String>('adult_choice_id');
     if ($_column == null) return null;
-    final manager = $$DarkAwakeningChoicesTableTableManager(
+    final manager = $$AdultChoicesTableTableManager(
       $_db,
-      $_db.darkAwakeningChoices,
+      $_db.adultChoices,
     ).filter((f) => f.id.sqlEquals($_column));
-    final item = $_typedResult.readTableOrNull(
-      _darkAwakeningChoiceIdTable($_db),
-    );
+    final item = $_typedResult.readTableOrNull(_adultChoiceIdTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: [item]),
-    );
-  }
-
-  static MultiTypedResultKey<$AbilitiesTable, List<AbilityData>>
-  _abilitiesRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
-    db.abilities,
-    aliasName: $_aliasNameGenerator(db.characters.id, db.abilities.characterId),
-  );
-
-  $$AbilitiesTableProcessedTableManager get abilitiesRefs {
-    final manager = $$AbilitiesTableTableManager(
-      $_db,
-      $_db.abilities,
-    ).filter((f) => f.characterId.id.sqlEquals($_itemColumn<String>('id')!));
-
-    final cache = $_typedResult.readTableOrNull(_abilitiesRefsTable($_db));
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
     );
   }
 
@@ -6883,6 +8091,29 @@ final class $$CharactersTableReferences
 
     final cache = $_typedResult.readTableOrNull(
       _characterTraitsRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$CharacterPowersTable, List<CharacterPowerData>>
+  _characterPowersRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.characterPowers,
+    aliasName: $_aliasNameGenerator(
+      db.characters.id,
+      db.characterPowers.characterId,
+    ),
+  );
+
+  $$CharacterPowersTableProcessedTableManager get characterPowersRefs {
+    final manager = $$CharacterPowersTableTableManager(
+      $_db,
+      $_db.characterPowers,
+    ).filter((f) => f.characterId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _characterPowersRefsTable($_db),
     );
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
@@ -6980,6 +8211,36 @@ class $$CharactersTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<int> get resistanceMental => $composableBuilder(
+    column: $table.resistanceMental,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get resistanceSpiritual => $composableBuilder(
+    column: $table.resistanceSpiritual,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get resistanceElementalHeat => $composableBuilder(
+    column: $table.resistanceElementalHeat,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get resistanceElementalCold => $composableBuilder(
+    column: $table.resistanceElementalCold,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get resistanceElementalPoison => $composableBuilder(
+    column: $table.resistanceElementalPoison,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get resistancePhysical => $composableBuilder(
+    column: $table.resistancePhysical,
+    builder: (column) => ColumnFilters(column),
+  );
+
   $$ChildhoodChoicesTableFilterComposer get childhoodChoiceId {
     final $$ChildhoodChoicesTableFilterComposer composer = $composerBuilder(
       composer: this,
@@ -7026,20 +8287,20 @@ class $$CharactersTableFilterComposer
     return composer;
   }
 
-  $$DarkAwakeningChoicesTableFilterComposer get darkAwakeningChoiceId {
-    final $$DarkAwakeningChoicesTableFilterComposer composer = $composerBuilder(
+  $$AdultChoicesTableFilterComposer get adultChoiceId {
+    final $$AdultChoicesTableFilterComposer composer = $composerBuilder(
       composer: this,
-      getCurrentColumn: (t) => t.darkAwakeningChoiceId,
-      referencedTable: $db.darkAwakeningChoices,
+      getCurrentColumn: (t) => t.adultChoiceId,
+      referencedTable: $db.adultChoices,
       getReferencedColumn: (t) => t.id,
       builder:
           (
             joinBuilder, {
             $addJoinBuilderToRootComposer,
             $removeJoinBuilderFromRootComposer,
-          }) => $$DarkAwakeningChoicesTableFilterComposer(
+          }) => $$AdultChoicesTableFilterComposer(
             $db: $db,
-            $table: $db.darkAwakeningChoices,
+            $table: $db.adultChoices,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -7047,31 +8308,6 @@ class $$CharactersTableFilterComposer
           ),
     );
     return composer;
-  }
-
-  Expression<bool> abilitiesRefs(
-    Expression<bool> Function($$AbilitiesTableFilterComposer f) f,
-  ) {
-    final $$AbilitiesTableFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.id,
-      referencedTable: $db.abilities,
-      getReferencedColumn: (t) => t.characterId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$AbilitiesTableFilterComposer(
-            $db: $db,
-            $table: $db.abilities,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return f(composer);
   }
 
   Expression<bool> characterMemoriesRefs(
@@ -7115,6 +8351,31 @@ class $$CharactersTableFilterComposer
           }) => $$CharacterTraitsTableFilterComposer(
             $db: $db,
             $table: $db.characterTraits,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> characterPowersRefs(
+    Expression<bool> Function($$CharacterPowersTableFilterComposer f) f,
+  ) {
+    final $$CharacterPowersTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.characterPowers,
+      getReferencedColumn: (t) => t.characterId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CharacterPowersTableFilterComposer(
+            $db: $db,
+            $table: $db.characterPowers,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -7214,6 +8475,36 @@ class $$CharactersTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get resistanceMental => $composableBuilder(
+    column: $table.resistanceMental,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get resistanceSpiritual => $composableBuilder(
+    column: $table.resistanceSpiritual,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get resistanceElementalHeat => $composableBuilder(
+    column: $table.resistanceElementalHeat,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get resistanceElementalCold => $composableBuilder(
+    column: $table.resistanceElementalCold,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get resistanceElementalPoison => $composableBuilder(
+    column: $table.resistanceElementalPoison,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get resistancePhysical => $composableBuilder(
+    column: $table.resistancePhysical,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$ChildhoodChoicesTableOrderingComposer get childhoodChoiceId {
     final $$ChildhoodChoicesTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -7260,27 +8551,26 @@ class $$CharactersTableOrderingComposer
     return composer;
   }
 
-  $$DarkAwakeningChoicesTableOrderingComposer get darkAwakeningChoiceId {
-    final $$DarkAwakeningChoicesTableOrderingComposer composer =
-        $composerBuilder(
-          composer: this,
-          getCurrentColumn: (t) => t.darkAwakeningChoiceId,
-          referencedTable: $db.darkAwakeningChoices,
-          getReferencedColumn: (t) => t.id,
-          builder:
-              (
-                joinBuilder, {
-                $addJoinBuilderToRootComposer,
+  $$AdultChoicesTableOrderingComposer get adultChoiceId {
+    final $$AdultChoicesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.adultChoiceId,
+      referencedTable: $db.adultChoices,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$AdultChoicesTableOrderingComposer(
+            $db: $db,
+            $table: $db.adultChoices,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
                 $removeJoinBuilderFromRootComposer,
-              }) => $$DarkAwakeningChoicesTableOrderingComposer(
-                $db: $db,
-                $table: $db.darkAwakeningChoices,
-                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-                joinBuilder: joinBuilder,
-                $removeJoinBuilderFromRootComposer:
-                    $removeJoinBuilderFromRootComposer,
-              ),
-        );
+          ),
+    );
     return composer;
   }
 }
@@ -7350,6 +8640,36 @@ class $$CharactersTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<int> get resistanceMental => $composableBuilder(
+    column: $table.resistanceMental,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get resistanceSpiritual => $composableBuilder(
+    column: $table.resistanceSpiritual,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get resistanceElementalHeat => $composableBuilder(
+    column: $table.resistanceElementalHeat,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get resistanceElementalCold => $composableBuilder(
+    column: $table.resistanceElementalCold,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get resistanceElementalPoison => $composableBuilder(
+    column: $table.resistanceElementalPoison,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get resistancePhysical => $composableBuilder(
+    column: $table.resistancePhysical,
+    builder: (column) => column,
+  );
+
   $$ChildhoodChoicesTableAnnotationComposer get childhoodChoiceId {
     final $$ChildhoodChoicesTableAnnotationComposer composer = $composerBuilder(
       composer: this,
@@ -7397,53 +8717,27 @@ class $$CharactersTableAnnotationComposer
     return composer;
   }
 
-  $$DarkAwakeningChoicesTableAnnotationComposer get darkAwakeningChoiceId {
-    final $$DarkAwakeningChoicesTableAnnotationComposer composer =
-        $composerBuilder(
-          composer: this,
-          getCurrentColumn: (t) => t.darkAwakeningChoiceId,
-          referencedTable: $db.darkAwakeningChoices,
-          getReferencedColumn: (t) => t.id,
-          builder:
-              (
-                joinBuilder, {
-                $addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer,
-              }) => $$DarkAwakeningChoicesTableAnnotationComposer(
-                $db: $db,
-                $table: $db.darkAwakeningChoices,
-                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-                joinBuilder: joinBuilder,
-                $removeJoinBuilderFromRootComposer:
-                    $removeJoinBuilderFromRootComposer,
-              ),
-        );
-    return composer;
-  }
-
-  Expression<T> abilitiesRefs<T extends Object>(
-    Expression<T> Function($$AbilitiesTableAnnotationComposer a) f,
-  ) {
-    final $$AbilitiesTableAnnotationComposer composer = $composerBuilder(
+  $$AdultChoicesTableAnnotationComposer get adultChoiceId {
+    final $$AdultChoicesTableAnnotationComposer composer = $composerBuilder(
       composer: this,
-      getCurrentColumn: (t) => t.id,
-      referencedTable: $db.abilities,
-      getReferencedColumn: (t) => t.characterId,
+      getCurrentColumn: (t) => t.adultChoiceId,
+      referencedTable: $db.adultChoices,
+      getReferencedColumn: (t) => t.id,
       builder:
           (
             joinBuilder, {
             $addJoinBuilderToRootComposer,
             $removeJoinBuilderFromRootComposer,
-          }) => $$AbilitiesTableAnnotationComposer(
+          }) => $$AdultChoicesTableAnnotationComposer(
             $db: $db,
-            $table: $db.abilities,
+            $table: $db.adultChoices,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
                 $removeJoinBuilderFromRootComposer,
           ),
     );
-    return f(composer);
+    return composer;
   }
 
   Expression<T> characterMemoriesRefs<T extends Object>(
@@ -7496,6 +8790,31 @@ class $$CharactersTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> characterPowersRefs<T extends Object>(
+    Expression<T> Function($$CharacterPowersTableAnnotationComposer a) f,
+  ) {
+    final $$CharacterPowersTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.characterPowers,
+      getReferencedColumn: (t) => t.characterId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CharacterPowersTableAnnotationComposer(
+            $db: $db,
+            $table: $db.characterPowers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$CharactersTableTableManager
@@ -7514,10 +8833,10 @@ class $$CharactersTableTableManager
           PrefetchHooks Function({
             bool childhoodChoiceId,
             bool majorEventChoiceId,
-            bool darkAwakeningChoiceId,
-            bool abilitiesRefs,
+            bool adultChoiceId,
             bool characterMemoriesRefs,
             bool characterTraitsRefs,
+            bool characterPowersRefs,
           })
         > {
   $$CharactersTableTableManager(_$AppDatabase db, $CharactersTable table)
@@ -7551,7 +8870,13 @@ class $$CharactersTableTableManager
                 Value<bool> abilitiesRevealed = const Value.absent(),
                 Value<String?> childhoodChoiceId = const Value.absent(),
                 Value<String?> majorEventChoiceId = const Value.absent(),
-                Value<String?> darkAwakeningChoiceId = const Value.absent(),
+                Value<String?> adultChoiceId = const Value.absent(),
+                Value<int> resistanceMental = const Value.absent(),
+                Value<int> resistanceSpiritual = const Value.absent(),
+                Value<int> resistanceElementalHeat = const Value.absent(),
+                Value<int> resistanceElementalCold = const Value.absent(),
+                Value<int> resistanceElementalPoison = const Value.absent(),
+                Value<int> resistancePhysical = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => CharactersCompanion(
                 id: id,
@@ -7572,7 +8897,13 @@ class $$CharactersTableTableManager
                 abilitiesRevealed: abilitiesRevealed,
                 childhoodChoiceId: childhoodChoiceId,
                 majorEventChoiceId: majorEventChoiceId,
-                darkAwakeningChoiceId: darkAwakeningChoiceId,
+                adultChoiceId: adultChoiceId,
+                resistanceMental: resistanceMental,
+                resistanceSpiritual: resistanceSpiritual,
+                resistanceElementalHeat: resistanceElementalHeat,
+                resistanceElementalCold: resistanceElementalCold,
+                resistanceElementalPoison: resistanceElementalPoison,
+                resistancePhysical: resistancePhysical,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -7595,7 +8926,13 @@ class $$CharactersTableTableManager
                 Value<bool> abilitiesRevealed = const Value.absent(),
                 Value<String?> childhoodChoiceId = const Value.absent(),
                 Value<String?> majorEventChoiceId = const Value.absent(),
-                Value<String?> darkAwakeningChoiceId = const Value.absent(),
+                Value<String?> adultChoiceId = const Value.absent(),
+                Value<int> resistanceMental = const Value.absent(),
+                Value<int> resistanceSpiritual = const Value.absent(),
+                Value<int> resistanceElementalHeat = const Value.absent(),
+                Value<int> resistanceElementalCold = const Value.absent(),
+                Value<int> resistanceElementalPoison = const Value.absent(),
+                Value<int> resistancePhysical = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => CharactersCompanion.insert(
                 id: id,
@@ -7616,7 +8953,13 @@ class $$CharactersTableTableManager
                 abilitiesRevealed: abilitiesRevealed,
                 childhoodChoiceId: childhoodChoiceId,
                 majorEventChoiceId: majorEventChoiceId,
-                darkAwakeningChoiceId: darkAwakeningChoiceId,
+                adultChoiceId: adultChoiceId,
+                resistanceMental: resistanceMental,
+                resistanceSpiritual: resistanceSpiritual,
+                resistanceElementalHeat: resistanceElementalHeat,
+                resistanceElementalCold: resistanceElementalCold,
+                resistanceElementalPoison: resistanceElementalPoison,
+                resistancePhysical: resistancePhysical,
                 rowid: rowid,
               ),
           withReferenceMapper:
@@ -7632,17 +8975,17 @@ class $$CharactersTableTableManager
           prefetchHooksCallback: ({
             childhoodChoiceId = false,
             majorEventChoiceId = false,
-            darkAwakeningChoiceId = false,
-            abilitiesRefs = false,
+            adultChoiceId = false,
             characterMemoriesRefs = false,
             characterTraitsRefs = false,
+            characterPowersRefs = false,
           }) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [
-                if (abilitiesRefs) db.abilities,
                 if (characterMemoriesRefs) db.characterMemories,
                 if (characterTraitsRefs) db.characterTraits,
+                if (characterPowersRefs) db.characterPowers,
               ],
               addJoins: <
                 T extends TableManagerState<
@@ -7687,16 +9030,16 @@ class $$CharactersTableTableManager
                           )
                           as T;
                 }
-                if (darkAwakeningChoiceId) {
+                if (adultChoiceId) {
                   state =
                       state.withJoin(
                             currentTable: table,
-                            currentColumn: table.darkAwakeningChoiceId,
+                            currentColumn: table.adultChoiceId,
                             referencedTable: $$CharactersTableReferences
-                                ._darkAwakeningChoiceIdTable(db),
+                                ._adultChoiceIdTable(db),
                             referencedColumn:
                                 $$CharactersTableReferences
-                                    ._darkAwakeningChoiceIdTable(db)
+                                    ._adultChoiceIdTable(db)
                                     .id,
                           )
                           as T;
@@ -7706,28 +9049,6 @@ class $$CharactersTableTableManager
               },
               getPrefetchedDataCallback: (items) async {
                 return [
-                  if (abilitiesRefs)
-                    await $_getPrefetchedData<
-                      CharacterData,
-                      $CharactersTable,
-                      AbilityData
-                    >(
-                      currentTable: table,
-                      referencedTable: $$CharactersTableReferences
-                          ._abilitiesRefsTable(db),
-                      managerFromTypedResult:
-                          (p0) =>
-                              $$CharactersTableReferences(
-                                db,
-                                table,
-                                p0,
-                              ).abilitiesRefs,
-                      referencedItemsForCurrentItem:
-                          (item, referencedItems) => referencedItems.where(
-                            (e) => e.characterId == item.id,
-                          ),
-                      typedResults: items,
-                    ),
                   if (characterMemoriesRefs)
                     await $_getPrefetchedData<
                       CharacterData,
@@ -7772,6 +9093,28 @@ class $$CharactersTableTableManager
                           ),
                       typedResults: items,
                     ),
+                  if (characterPowersRefs)
+                    await $_getPrefetchedData<
+                      CharacterData,
+                      $CharactersTable,
+                      CharacterPowerData
+                    >(
+                      currentTable: table,
+                      referencedTable: $$CharactersTableReferences
+                          ._characterPowersRefsTable(db),
+                      managerFromTypedResult:
+                          (p0) =>
+                              $$CharactersTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).characterPowersRefs,
+                      referencedItemsForCurrentItem:
+                          (item, referencedItems) => referencedItems.where(
+                            (e) => e.characterId == item.id,
+                          ),
+                      typedResults: items,
+                    ),
                 ];
               },
             );
@@ -7795,60 +9138,36 @@ typedef $$CharactersTableProcessedTableManager =
       PrefetchHooks Function({
         bool childhoodChoiceId,
         bool majorEventChoiceId,
-        bool darkAwakeningChoiceId,
-        bool abilitiesRefs,
+        bool adultChoiceId,
         bool characterMemoriesRefs,
         bool characterTraitsRefs,
+        bool characterPowersRefs,
       })
     >;
 typedef $$AbilitiesTableCreateCompanionBuilder =
     AbilitiesCompanion Function({
       Value<String> id,
-      required String characterId,
+      Value<String?> characterId,
       required String name,
       Value<String?> description,
       Value<int> manaCost,
       Value<int> cooldown,
       required CharacterRank rankRequired,
-      required AspectType aspectType,
+      Value<AspectType?> aspectType,
       Value<int> rowid,
     });
 typedef $$AbilitiesTableUpdateCompanionBuilder =
     AbilitiesCompanion Function({
       Value<String> id,
-      Value<String> characterId,
+      Value<String?> characterId,
       Value<String> name,
       Value<String?> description,
       Value<int> manaCost,
       Value<int> cooldown,
       Value<CharacterRank> rankRequired,
-      Value<AspectType> aspectType,
+      Value<AspectType?> aspectType,
       Value<int> rowid,
     });
-
-final class $$AbilitiesTableReferences
-    extends BaseReferences<_$AppDatabase, $AbilitiesTable, AbilityData> {
-  $$AbilitiesTableReferences(super.$_db, super.$_table, super.$_typedResult);
-
-  static $CharactersTable _characterIdTable(_$AppDatabase db) =>
-      db.characters.createAlias(
-        $_aliasNameGenerator(db.abilities.characterId, db.characters.id),
-      );
-
-  $$CharactersTableProcessedTableManager get characterId {
-    final $_column = $_itemColumn<String>('character_id')!;
-
-    final manager = $$CharactersTableTableManager(
-      $_db,
-      $_db.characters,
-    ).filter((f) => f.id.sqlEquals($_column));
-    final item = $_typedResult.readTableOrNull(_characterIdTable($_db));
-    if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
-  }
-}
 
 class $$AbilitiesTableFilterComposer
     extends Composer<_$AppDatabase, $AbilitiesTable> {
@@ -7861,6 +9180,11 @@ class $$AbilitiesTableFilterComposer
   });
   ColumnFilters<String> get id => $composableBuilder(
     column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get characterId => $composableBuilder(
+    column: $table.characterId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -7890,34 +9214,11 @@ class $$AbilitiesTableFilterComposer
     builder: (column) => ColumnWithTypeConverterFilters(column),
   );
 
-  ColumnWithTypeConverterFilters<AspectType, AspectType, String>
+  ColumnWithTypeConverterFilters<AspectType?, AspectType, String>
   get aspectType => $composableBuilder(
     column: $table.aspectType,
     builder: (column) => ColumnWithTypeConverterFilters(column),
   );
-
-  $$CharactersTableFilterComposer get characterId {
-    final $$CharactersTableFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.characterId,
-      referencedTable: $db.characters,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$CharactersTableFilterComposer(
-            $db: $db,
-            $table: $db.characters,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
 }
 
 class $$AbilitiesTableOrderingComposer
@@ -7931,6 +9232,11 @@ class $$AbilitiesTableOrderingComposer
   });
   ColumnOrderings<String> get id => $composableBuilder(
     column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get characterId => $composableBuilder(
+    column: $table.characterId,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -7963,29 +9269,6 @@ class $$AbilitiesTableOrderingComposer
     column: $table.aspectType,
     builder: (column) => ColumnOrderings(column),
   );
-
-  $$CharactersTableOrderingComposer get characterId {
-    final $$CharactersTableOrderingComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.characterId,
-      referencedTable: $db.characters,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$CharactersTableOrderingComposer(
-            $db: $db,
-            $table: $db.characters,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
 }
 
 class $$AbilitiesTableAnnotationComposer
@@ -7999,6 +9282,11 @@ class $$AbilitiesTableAnnotationComposer
   });
   GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get characterId => $composableBuilder(
+    column: $table.characterId,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get name =>
       $composableBuilder(column: $table.name, builder: (column) => column);
@@ -8020,34 +9308,11 @@ class $$AbilitiesTableAnnotationComposer
         builder: (column) => column,
       );
 
-  GeneratedColumnWithTypeConverter<AspectType, String> get aspectType =>
+  GeneratedColumnWithTypeConverter<AspectType?, String> get aspectType =>
       $composableBuilder(
         column: $table.aspectType,
         builder: (column) => column,
       );
-
-  $$CharactersTableAnnotationComposer get characterId {
-    final $$CharactersTableAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.characterId,
-      referencedTable: $db.characters,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$CharactersTableAnnotationComposer(
-            $db: $db,
-            $table: $db.characters,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
 }
 
 class $$AbilitiesTableTableManager
@@ -8061,9 +9326,12 @@ class $$AbilitiesTableTableManager
           $$AbilitiesTableAnnotationComposer,
           $$AbilitiesTableCreateCompanionBuilder,
           $$AbilitiesTableUpdateCompanionBuilder,
-          (AbilityData, $$AbilitiesTableReferences),
+          (
+            AbilityData,
+            BaseReferences<_$AppDatabase, $AbilitiesTable, AbilityData>,
+          ),
           AbilityData,
-          PrefetchHooks Function({bool characterId})
+          PrefetchHooks Function()
         > {
   $$AbilitiesTableTableManager(_$AppDatabase db, $AbilitiesTable table)
     : super(
@@ -8079,13 +9347,13 @@ class $$AbilitiesTableTableManager
           updateCompanionCallback:
               ({
                 Value<String> id = const Value.absent(),
-                Value<String> characterId = const Value.absent(),
+                Value<String?> characterId = const Value.absent(),
                 Value<String> name = const Value.absent(),
                 Value<String?> description = const Value.absent(),
                 Value<int> manaCost = const Value.absent(),
                 Value<int> cooldown = const Value.absent(),
                 Value<CharacterRank> rankRequired = const Value.absent(),
-                Value<AspectType> aspectType = const Value.absent(),
+                Value<AspectType?> aspectType = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => AbilitiesCompanion(
                 id: id,
@@ -8101,13 +9369,13 @@ class $$AbilitiesTableTableManager
           createCompanionCallback:
               ({
                 Value<String> id = const Value.absent(),
-                required String characterId,
+                Value<String?> characterId = const Value.absent(),
                 required String name,
                 Value<String?> description = const Value.absent(),
                 Value<int> manaCost = const Value.absent(),
                 Value<int> cooldown = const Value.absent(),
                 required CharacterRank rankRequired,
-                required AspectType aspectType,
+                Value<AspectType?> aspectType = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => AbilitiesCompanion.insert(
                 id: id,
@@ -8126,51 +9394,11 @@ class $$AbilitiesTableTableManager
                       .map(
                         (e) => (
                           e.readTable(table),
-                          $$AbilitiesTableReferences(db, table, e),
+                          BaseReferences(db, table, e),
                         ),
                       )
                       .toList(),
-          prefetchHooksCallback: ({characterId = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [],
-              addJoins: <
-                T extends TableManagerState<
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic,
-                  dynamic
-                >
-              >(state) {
-                if (characterId) {
-                  state =
-                      state.withJoin(
-                            currentTable: table,
-                            currentColumn: table.characterId,
-                            referencedTable: $$AbilitiesTableReferences
-                                ._characterIdTable(db),
-                            referencedColumn:
-                                $$AbilitiesTableReferences
-                                    ._characterIdTable(db)
-                                    .id,
-                          )
-                          as T;
-                }
-
-                return state;
-              },
-              getPrefetchedDataCallback: (items) async {
-                return [];
-              },
-            );
-          },
+          prefetchHooksCallback: null,
         ),
       );
 }
@@ -8185,9 +9413,12 @@ typedef $$AbilitiesTableProcessedTableManager =
       $$AbilitiesTableAnnotationComposer,
       $$AbilitiesTableCreateCompanionBuilder,
       $$AbilitiesTableUpdateCompanionBuilder,
-      (AbilityData, $$AbilitiesTableReferences),
+      (
+        AbilityData,
+        BaseReferences<_$AppDatabase, $AbilitiesTable, AbilityData>,
+      ),
       AbilityData,
-      PrefetchHooks Function({bool characterId})
+      PrefetchHooks Function()
     >;
 typedef $$MemoriesTableCreateCompanionBuilder =
     MemoriesCompanion Function({
@@ -9296,6 +10527,753 @@ typedef $$CharacterTraitsTableProcessedTableManager =
       CharacterTraitData,
       PrefetchHooks Function({bool characterId, bool traitId})
     >;
+typedef $$PowersTableCreateCompanionBuilder =
+    PowersCompanion Function({
+      Value<String> id,
+      required String name,
+      Value<String?> description,
+      Value<String?> sourceType,
+      Value<int> manaCost,
+      Value<int> cooldown,
+      Value<CharacterRank?> rankRequired,
+      Value<int> rowid,
+    });
+typedef $$PowersTableUpdateCompanionBuilder =
+    PowersCompanion Function({
+      Value<String> id,
+      Value<String> name,
+      Value<String?> description,
+      Value<String?> sourceType,
+      Value<int> manaCost,
+      Value<int> cooldown,
+      Value<CharacterRank?> rankRequired,
+      Value<int> rowid,
+    });
+
+final class $$PowersTableReferences
+    extends BaseReferences<_$AppDatabase, $PowersTable, PowerData> {
+  $$PowersTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static MultiTypedResultKey<$CharacterPowersTable, List<CharacterPowerData>>
+  _characterPowersRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.characterPowers,
+    aliasName: $_aliasNameGenerator(db.powers.id, db.characterPowers.powerId),
+  );
+
+  $$CharacterPowersTableProcessedTableManager get characterPowersRefs {
+    final manager = $$CharacterPowersTableTableManager(
+      $_db,
+      $_db.characterPowers,
+    ).filter((f) => f.powerId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _characterPowersRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
+
+class $$PowersTableFilterComposer
+    extends Composer<_$AppDatabase, $PowersTable> {
+  $$PowersTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sourceType => $composableBuilder(
+    column: $table.sourceType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get manaCost => $composableBuilder(
+    column: $table.manaCost,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get cooldown => $composableBuilder(
+    column: $table.cooldown,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<CharacterRank?, CharacterRank, String>
+  get rankRequired => $composableBuilder(
+    column: $table.rankRequired,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
+  );
+
+  Expression<bool> characterPowersRefs(
+    Expression<bool> Function($$CharacterPowersTableFilterComposer f) f,
+  ) {
+    final $$CharacterPowersTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.characterPowers,
+      getReferencedColumn: (t) => t.powerId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CharacterPowersTableFilterComposer(
+            $db: $db,
+            $table: $db.characterPowers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$PowersTableOrderingComposer
+    extends Composer<_$AppDatabase, $PowersTable> {
+  $$PowersTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get sourceType => $composableBuilder(
+    column: $table.sourceType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get manaCost => $composableBuilder(
+    column: $table.manaCost,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get cooldown => $composableBuilder(
+    column: $table.cooldown,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get rankRequired => $composableBuilder(
+    column: $table.rankRequired,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$PowersTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PowersTable> {
+  $$PowersTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get sourceType => $composableBuilder(
+    column: $table.sourceType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get manaCost =>
+      $composableBuilder(column: $table.manaCost, builder: (column) => column);
+
+  GeneratedColumn<int> get cooldown =>
+      $composableBuilder(column: $table.cooldown, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<CharacterRank?, String> get rankRequired =>
+      $composableBuilder(
+        column: $table.rankRequired,
+        builder: (column) => column,
+      );
+
+  Expression<T> characterPowersRefs<T extends Object>(
+    Expression<T> Function($$CharacterPowersTableAnnotationComposer a) f,
+  ) {
+    final $$CharacterPowersTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.characterPowers,
+      getReferencedColumn: (t) => t.powerId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CharacterPowersTableAnnotationComposer(
+            $db: $db,
+            $table: $db.characterPowers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$PowersTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $PowersTable,
+          PowerData,
+          $$PowersTableFilterComposer,
+          $$PowersTableOrderingComposer,
+          $$PowersTableAnnotationComposer,
+          $$PowersTableCreateCompanionBuilder,
+          $$PowersTableUpdateCompanionBuilder,
+          (PowerData, $$PowersTableReferences),
+          PowerData,
+          PrefetchHooks Function({bool characterPowersRefs})
+        > {
+  $$PowersTableTableManager(_$AppDatabase db, $PowersTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer:
+              () => $$PowersTableFilterComposer($db: db, $table: table),
+          createOrderingComposer:
+              () => $$PowersTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer:
+              () => $$PowersTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String?> description = const Value.absent(),
+                Value<String?> sourceType = const Value.absent(),
+                Value<int> manaCost = const Value.absent(),
+                Value<int> cooldown = const Value.absent(),
+                Value<CharacterRank?> rankRequired = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => PowersCompanion(
+                id: id,
+                name: name,
+                description: description,
+                sourceType: sourceType,
+                manaCost: manaCost,
+                cooldown: cooldown,
+                rankRequired: rankRequired,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                required String name,
+                Value<String?> description = const Value.absent(),
+                Value<String?> sourceType = const Value.absent(),
+                Value<int> manaCost = const Value.absent(),
+                Value<int> cooldown = const Value.absent(),
+                Value<CharacterRank?> rankRequired = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => PowersCompanion.insert(
+                id: id,
+                name: name,
+                description: description,
+                sourceType: sourceType,
+                manaCost: manaCost,
+                cooldown: cooldown,
+                rankRequired: rankRequired,
+                rowid: rowid,
+              ),
+          withReferenceMapper:
+              (p0) =>
+                  p0
+                      .map(
+                        (e) => (
+                          e.readTable(table),
+                          $$PowersTableReferences(db, table, e),
+                        ),
+                      )
+                      .toList(),
+          prefetchHooksCallback: ({characterPowersRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [
+                if (characterPowersRefs) db.characterPowers,
+              ],
+              addJoins: null,
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (characterPowersRefs)
+                    await $_getPrefetchedData<
+                      PowerData,
+                      $PowersTable,
+                      CharacterPowerData
+                    >(
+                      currentTable: table,
+                      referencedTable: $$PowersTableReferences
+                          ._characterPowersRefsTable(db),
+                      managerFromTypedResult:
+                          (p0) =>
+                              $$PowersTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).characterPowersRefs,
+                      referencedItemsForCurrentItem:
+                          (item, referencedItems) => referencedItems.where(
+                            (e) => e.powerId == item.id,
+                          ),
+                      typedResults: items,
+                    ),
+                ];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$PowersTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $PowersTable,
+      PowerData,
+      $$PowersTableFilterComposer,
+      $$PowersTableOrderingComposer,
+      $$PowersTableAnnotationComposer,
+      $$PowersTableCreateCompanionBuilder,
+      $$PowersTableUpdateCompanionBuilder,
+      (PowerData, $$PowersTableReferences),
+      PowerData,
+      PrefetchHooks Function({bool characterPowersRefs})
+    >;
+typedef $$CharacterPowersTableCreateCompanionBuilder =
+    CharacterPowersCompanion Function({
+      required String characterId,
+      required String powerId,
+      Value<bool> isEquipped,
+      Value<int> rowid,
+    });
+typedef $$CharacterPowersTableUpdateCompanionBuilder =
+    CharacterPowersCompanion Function({
+      Value<String> characterId,
+      Value<String> powerId,
+      Value<bool> isEquipped,
+      Value<int> rowid,
+    });
+
+final class $$CharacterPowersTableReferences
+    extends
+        BaseReferences<
+          _$AppDatabase,
+          $CharacterPowersTable,
+          CharacterPowerData
+        > {
+  $$CharacterPowersTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $CharactersTable _characterIdTable(_$AppDatabase db) =>
+      db.characters.createAlias(
+        $_aliasNameGenerator(db.characterPowers.characterId, db.characters.id),
+      );
+
+  $$CharactersTableProcessedTableManager get characterId {
+    final $_column = $_itemColumn<String>('character_id')!;
+
+    final manager = $$CharactersTableTableManager(
+      $_db,
+      $_db.characters,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_characterIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $PowersTable _powerIdTable(_$AppDatabase db) => db.powers.createAlias(
+    $_aliasNameGenerator(db.characterPowers.powerId, db.powers.id),
+  );
+
+  $$PowersTableProcessedTableManager get powerId {
+    final $_column = $_itemColumn<String>('power_id')!;
+
+    final manager = $$PowersTableTableManager(
+      $_db,
+      $_db.powers,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_powerIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$CharacterPowersTableFilterComposer
+    extends Composer<_$AppDatabase, $CharacterPowersTable> {
+  $$CharacterPowersTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<bool> get isEquipped => $composableBuilder(
+    column: $table.isEquipped,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$CharactersTableFilterComposer get characterId {
+    final $$CharactersTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.characterId,
+      referencedTable: $db.characters,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CharactersTableFilterComposer(
+            $db: $db,
+            $table: $db.characters,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$PowersTableFilterComposer get powerId {
+    final $$PowersTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.powerId,
+      referencedTable: $db.powers,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PowersTableFilterComposer(
+            $db: $db,
+            $table: $db.powers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$CharacterPowersTableOrderingComposer
+    extends Composer<_$AppDatabase, $CharacterPowersTable> {
+  $$CharacterPowersTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<bool> get isEquipped => $composableBuilder(
+    column: $table.isEquipped,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$CharactersTableOrderingComposer get characterId {
+    final $$CharactersTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.characterId,
+      referencedTable: $db.characters,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CharactersTableOrderingComposer(
+            $db: $db,
+            $table: $db.characters,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$PowersTableOrderingComposer get powerId {
+    final $$PowersTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.powerId,
+      referencedTable: $db.powers,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PowersTableOrderingComposer(
+            $db: $db,
+            $table: $db.powers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$CharacterPowersTableAnnotationComposer
+    extends Composer<_$AppDatabase, $CharacterPowersTable> {
+  $$CharacterPowersTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<bool> get isEquipped => $composableBuilder(
+    column: $table.isEquipped,
+    builder: (column) => column,
+  );
+
+  $$CharactersTableAnnotationComposer get characterId {
+    final $$CharactersTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.characterId,
+      referencedTable: $db.characters,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CharactersTableAnnotationComposer(
+            $db: $db,
+            $table: $db.characters,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$PowersTableAnnotationComposer get powerId {
+    final $$PowersTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.powerId,
+      referencedTable: $db.powers,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PowersTableAnnotationComposer(
+            $db: $db,
+            $table: $db.powers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$CharacterPowersTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $CharacterPowersTable,
+          CharacterPowerData,
+          $$CharacterPowersTableFilterComposer,
+          $$CharacterPowersTableOrderingComposer,
+          $$CharacterPowersTableAnnotationComposer,
+          $$CharacterPowersTableCreateCompanionBuilder,
+          $$CharacterPowersTableUpdateCompanionBuilder,
+          (CharacterPowerData, $$CharacterPowersTableReferences),
+          CharacterPowerData,
+          PrefetchHooks Function({bool characterId, bool powerId})
+        > {
+  $$CharacterPowersTableTableManager(
+    _$AppDatabase db,
+    $CharacterPowersTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer:
+              () =>
+                  $$CharacterPowersTableFilterComposer($db: db, $table: table),
+          createOrderingComposer:
+              () => $$CharacterPowersTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer:
+              () => $$CharacterPowersTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> characterId = const Value.absent(),
+                Value<String> powerId = const Value.absent(),
+                Value<bool> isEquipped = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => CharacterPowersCompanion(
+                characterId: characterId,
+                powerId: powerId,
+                isEquipped: isEquipped,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String characterId,
+                required String powerId,
+                Value<bool> isEquipped = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => CharacterPowersCompanion.insert(
+                characterId: characterId,
+                powerId: powerId,
+                isEquipped: isEquipped,
+                rowid: rowid,
+              ),
+          withReferenceMapper:
+              (p0) =>
+                  p0
+                      .map(
+                        (e) => (
+                          e.readTable(table),
+                          $$CharacterPowersTableReferences(db, table, e),
+                        ),
+                      )
+                      .toList(),
+          prefetchHooksCallback: ({characterId = false, powerId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins: <
+                T extends TableManagerState<
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic,
+                  dynamic
+                >
+              >(state) {
+                if (characterId) {
+                  state =
+                      state.withJoin(
+                            currentTable: table,
+                            currentColumn: table.characterId,
+                            referencedTable: $$CharacterPowersTableReferences
+                                ._characterIdTable(db),
+                            referencedColumn:
+                                $$CharacterPowersTableReferences
+                                    ._characterIdTable(db)
+                                    .id,
+                          )
+                          as T;
+                }
+                if (powerId) {
+                  state =
+                      state.withJoin(
+                            currentTable: table,
+                            currentColumn: table.powerId,
+                            referencedTable: $$CharacterPowersTableReferences
+                                ._powerIdTable(db),
+                            referencedColumn:
+                                $$CharacterPowersTableReferences
+                                    ._powerIdTable(db)
+                                    .id,
+                          )
+                          as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$CharacterPowersTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $CharacterPowersTable,
+      CharacterPowerData,
+      $$CharacterPowersTableFilterComposer,
+      $$CharacterPowersTableOrderingComposer,
+      $$CharacterPowersTableAnnotationComposer,
+      $$CharacterPowersTableCreateCompanionBuilder,
+      $$CharacterPowersTableUpdateCompanionBuilder,
+      (CharacterPowerData, $$CharacterPowersTableReferences),
+      CharacterPowerData,
+      PrefetchHooks Function({bool characterId, bool powerId})
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -9306,8 +11284,8 @@ class $AppDatabaseManager {
       $$ChildhoodChoicesTableTableManager(_db, _db.childhoodChoices);
   $$MajorEventChoicesTableTableManager get majorEventChoices =>
       $$MajorEventChoicesTableTableManager(_db, _db.majorEventChoices);
-  $$DarkAwakeningChoicesTableTableManager get darkAwakeningChoices =>
-      $$DarkAwakeningChoicesTableTableManager(_db, _db.darkAwakeningChoices);
+  $$AdultChoicesTableTableManager get adultChoices =>
+      $$AdultChoicesTableTableManager(_db, _db.adultChoices);
   $$CharactersTableTableManager get characters =>
       $$CharactersTableTableManager(_db, _db.characters);
   $$AbilitiesTableTableManager get abilities =>
@@ -9318,4 +11296,8 @@ class $AppDatabaseManager {
       $$CharacterMemoriesTableTableManager(_db, _db.characterMemories);
   $$CharacterTraitsTableTableManager get characterTraits =>
       $$CharacterTraitsTableTableManager(_db, _db.characterTraits);
+  $$PowersTableTableManager get powers =>
+      $$PowersTableTableManager(_db, _db.powers);
+  $$CharacterPowersTableTableManager get characterPowers =>
+      $$CharacterPowersTableTableManager(_db, _db.characterPowers);
 }

@@ -1,5 +1,4 @@
 // lib/screens/character_creation_screen.dart
-import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:shadow_slave_rpg/main.dart'; // Importa a instância global do banco de dados 'db'
 import 'package:shadow_slave_rpg/models/_models.dart'; // Importa todos os modelos
@@ -8,10 +7,10 @@ import 'package:shadow_slave_rpg/screens/pre_boss_challenges_screen.dart'; // Pr
 import 'package:firebase_auth/firebase_auth.dart'; // Para obter o userId
 import 'package:random_string/random_string.dart'; // Para gerar userId anonimo
 import 'package:shadow_slave_rpg/database/database.dart'; // Importa o AppDatabase e as classes geradas
-
+import 'package:drift/drift.dart' show Value; // Importe para usar Value()
 
 class CharacterCreationScreen extends StatefulWidget {
-  const CharacterCreationScreen({super.key});
+  const CharacterCreationScreen({Key? key}) : super(key: key);
 
   @override
   State<CharacterCreationScreen> createState() =>
@@ -22,11 +21,11 @@ class _CharacterCreationScreenState extends State<CharacterCreationScreen> {
   final TextEditingController _nameController = TextEditingController();
   ChildhoodChoiceData? _selectedChildhoodChoice;
   MajorEventChoiceData? _selectedMajorEventChoice;
-  DarkAwakeningChoiceData? _selectedDarkAwakeningChoice;
+  AdultChoiceData? _selectedAdultChoice; // RENOMEADO AQUI
 
   List<ChildhoodChoiceData> _childhoodOptions = [];
   List<MajorEventChoiceData> _majorEventOptions = [];
-  List<DarkAwakeningChoiceData> _darkAwakeningOptions = [];
+  List<AdultChoiceData> _adultOptions = []; // RENOMEADO AQUI
 
   @override
   void initState() {
@@ -40,12 +39,12 @@ class _CharacterCreationScreenState extends State<CharacterCreationScreen> {
 
     final childhood = await db.getAllChildhoodChoices();
     final majorEvent = await db.getAllMajorEventChoices();
-    final darkAwakening = await db.getAllDarkAwakeningChoices();
+    final adult = await db.getAllAdultChoices(); // RENOMEADO AQUI
 
     setState(() {
       _childhoodOptions = childhood;
       _majorEventOptions = majorEvent;
-      _darkAwakeningOptions = darkAwakening;
+      _adultOptions = adult; // RENOMEADO AQUI
     });
   }
 
@@ -201,74 +200,76 @@ class _CharacterCreationScreenState extends State<CharacterCreationScreen> {
       });
     }
 
-    if ((await db.getAllDarkAwakeningChoices()).isEmpty) {
+    // RENOMEADO: Popula AdultChoices
+    if ((await db.getAllAdultChoices()).isEmpty) {
+      // RENOMEADO AQUI
       await db.batch((batch) {
         batch.insert(
-          db.darkAwakeningChoices,
-          DarkAwakeningChoicesCompanion.insert(
+          db.adultChoices,
+          AdultChoicesCompanion.insert(
             description: 'Corvo de ossos',
             aspectType: Value(AspectType.shadowWeaver),
           ),
         );
         batch.insert(
-          db.darkAwakeningChoices,
-          DarkAwakeningChoicesCompanion.insert(
+          db.adultChoices,
+          AdultChoicesCompanion.insert(
             description: 'Lobo das ruínas',
             aspectType: Value(AspectType.kinetic),
           ),
         );
         batch.insert(
-          db.darkAwakeningChoices,
-          DarkAwakeningChoicesCompanion.insert(
+          db.adultChoices,
+          AdultChoicesCompanion.insert(
             description: 'Sombra líquida',
             aspectType: Value(AspectType.illusionist),
           ),
         );
         batch.insert(
-          db.darkAwakeningChoices,
-          DarkAwakeningChoicesCompanion.insert(
+          db.adultChoices,
+          AdultChoicesCompanion.insert(
             description: 'Monólito ambulante',
             aspectType: Value(AspectType.geomancer),
           ),
         );
         batch.insert(
-          db.darkAwakeningChoices,
-          DarkAwakeningChoicesCompanion.insert(
+          db.adultChoices,
+          AdultChoicesCompanion.insert(
             description: 'Véu de espinhos',
             aspectType: Value(AspectType.venomous),
           ),
         );
         batch.insert(
-          db.darkAwakeningChoices,
-          DarkAwakeningChoicesCompanion.insert(
+          db.adultChoices,
+          AdultChoicesCompanion.insert(
             description: 'Marionete sem rosto',
             aspectType: Value(AspectType.psychic),
           ),
         );
         batch.insert(
-          db.darkAwakeningChoices,
-          DarkAwakeningChoicesCompanion.insert(
+          db.adultChoices,
+          AdultChoicesCompanion.insert(
             description: 'Serpente do Medo',
             aspectType: Value(AspectType.venomous),
           ),
-        ); // Exemplo de aspecto repetido
+        );
         batch.insert(
-          db.darkAwakeningChoices,
-          DarkAwakeningChoicesCompanion.insert(
+          db.adultChoices,
+          AdultChoicesCompanion.insert(
             description: 'Manto de Ilusões',
             aspectType: Value(AspectType.illusionist),
           ),
         );
         batch.insert(
-          db.darkAwakeningChoices,
-          DarkAwakeningChoicesCompanion.insert(
+          db.adultChoices,
+          AdultChoicesCompanion.insert(
             description: 'Garras de Destruição',
             aspectType: Value(AspectType.kinetic),
           ),
         );
         batch.insert(
-          db.darkAwakeningChoices,
-          DarkAwakeningChoicesCompanion.insert(
+          db.adultChoices,
+          AdultChoicesCompanion.insert(
             description: 'Olho da Noite Eterna',
             aspectType: Value(AspectType.shadowWeaver),
           ),
@@ -291,7 +292,8 @@ class _CharacterCreationScreenState extends State<CharacterCreationScreen> {
     }
     if (_selectedChildhoodChoice == null ||
         _selectedMajorEventChoice == null ||
-        _selectedDarkAwakeningChoice == null) {
+        _selectedAdultChoice == null) {
+      // RENOMEADO AQUI
       _showMessage('Por favor, faça todas as escolhas de biografia.');
       return;
     }
@@ -309,23 +311,31 @@ class _CharacterCreationScreenState extends State<CharacterCreationScreen> {
     strength +=
         _selectedChildhoodChoice!.strengthBonus +
         _selectedMajorEventChoice!.strengthBonus +
-        _selectedDarkAwakeningChoice!.strengthBonus;
+        _selectedAdultChoice!.strengthBonus; // RENOMEADO AQUI
     agility +=
         _selectedChildhoodChoice!.agilityBonus +
         _selectedMajorEventChoice!.agilityBonus +
-        _selectedDarkAwakeningChoice!.agilityBonus;
+        _selectedAdultChoice!.agilityBonus; // RENOMEADO AQUI
     intelligence +=
         _selectedChildhoodChoice!.intelligenceBonus +
         _selectedMajorEventChoice!.intelligenceBonus +
-        _selectedDarkAwakeningChoice!.intelligenceBonus;
+        _selectedAdultChoice!.intelligenceBonus; // RENOMEADO AQUI
     perception +=
         _selectedChildhoodChoice!.perceptionBonus +
         _selectedMajorEventChoice!.perceptionBonus +
-        _selectedDarkAwakeningChoice!.perceptionBonus;
+        _selectedAdultChoice!.perceptionBonus; // RENOMEADO AQUI
     endurance +=
         _selectedChildhoodChoice!.enduranceBonus +
         _selectedMajorEventChoice!.enduranceBonus +
-        _selectedDarkAwakeningChoice!.enduranceBonus;
+        _selectedAdultChoice!.enduranceBonus; // RENOMEADO AQUI
+
+    // Adicionando valores padrão (0) para as novas resistências
+    int resistanceMental = 0;
+    int resistanceSpiritual = 0;
+    int resistanceElementalHeat = 0;
+    int resistanceElementalCold = 0;
+    int resistanceElementalPoison = 0;
+    int resistancePhysical = 0;
 
     // Cria um novo personagem com valores iniciais e as escolhas de biografia
     final newCharacter = CharactersCompanion.insert(
@@ -339,7 +349,14 @@ class _CharacterCreationScreenState extends State<CharacterCreationScreen> {
       endurance: Value(endurance),
       childhoodChoiceId: Value(_selectedChildhoodChoice!.id),
       majorEventChoiceId: Value(_selectedMajorEventChoice!.id),
-      darkAwakeningChoiceId: Value(_selectedDarkAwakeningChoice!.id),
+      adultChoiceId: Value(_selectedAdultChoice!.id), // RENOMEADO AQUI
+      // NOVAS RESISTÊNCIAS:
+      resistanceMental: Value(resistanceMental),
+      resistanceSpiritual: Value(resistanceSpiritual),
+      resistanceElementalHeat: Value(resistanceElementalHeat),
+      resistanceElementalCold: Value(resistanceElementalCold),
+      resistanceElementalPoison: Value(resistanceElementalPoison),
+      resistancePhysical: Value(resistancePhysical),
     );
 
     try {
@@ -391,7 +408,8 @@ class _CharacterCreationScreenState extends State<CharacterCreationScreen> {
         child:
             _childhoodOptions.isEmpty ||
                     _majorEventOptions.isEmpty ||
-                    _darkAwakeningOptions.isEmpty
+                    _adultOptions
+                        .isEmpty // RENOMEADO AQUI
                 ? const Center(
                   child: CircularProgressIndicator(),
                 ) // Mostra carregamento enquanto opções são carregadas
@@ -471,8 +489,9 @@ class _CharacterCreationScreenState extends State<CharacterCreationScreen> {
                       ),
                       const SizedBox(height: 24.0),
 
+                      // RENOMEADO: Seção de Escolhas Adultas (antigo Despertar Sombrio)
                       Text(
-                        '3. Despertar Sombrio (Conexão com o Mundo de Pesadelos)',
+                        '3. Escolha Adulta (Definição de Caminho e Aspecto)',
                         style: Theme.of(context).textTheme.headlineSmall
                             ?.copyWith(color: Colors.white70),
                       ),
@@ -481,14 +500,17 @@ class _CharacterCreationScreenState extends State<CharacterCreationScreen> {
                         spacing: 8.0,
                         runSpacing: 8.0,
                         children:
-                            _darkAwakeningOptions.map((choice) {
+                            _adultOptions.map((choice) {
+                              // RENOMEADO AQUI
                               return ChoiceButton(
                                 text: choice.description,
                                 isSelected:
-                                    _selectedDarkAwakeningChoice == choice,
+                                    _selectedAdultChoice ==
+                                    choice, // RENOMEADO AQUI
                                 onTap: () {
                                   setState(() {
-                                    _selectedDarkAwakeningChoice = choice;
+                                    _selectedAdultChoice =
+                                        choice; // RENOMEADO AQUI
                                   });
                                 },
                               );

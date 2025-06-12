@@ -6,12 +6,12 @@ import 'package:shadow_slave_rpg/firebase_options.dart';
 import 'package:shadow_slave_rpg/screens/character_creation_screen.dart';
 import 'package:shadow_slave_rpg/database/database.dart';
 import 'package:shadow_slave_rpg/models/_models.dart';
-import 'package:drift/drift.dart'; // Importe para usar Value()
+import 'package:drift/drift.dart' show Value; // Importe para usar Value()
 
 // Variável global para a instância do banco de dados drift
 late AppDatabase db;
 
-// Função _populateInitialData AGORA NO NÍVEL SUPERIOR DO ARQUIVO
+// Função _populateInitialData agora no nível superior do arquivo
 /// Função para popular o banco de dados com dados iniciais se estiver vazio.
 Future<void> _populateInitialData(AppDatabase database) async {
   // Popula Memórias se estiverem vazias
@@ -70,6 +70,10 @@ Future<void> _populateInitialData(AppDatabase database) async {
     });
     print('Memórias iniciais populadas.');
   }
+
+  // Popula Traits e Abilities (chamando a função do AppDatabase)
+  await database.populateDefaultTraitsAndAbilities();
+
   // As escolhas de biografia são populadas na CharacterCreationScreen.
 }
 
@@ -80,7 +84,6 @@ void main() async {
 
   db = AppDatabase();
 
-  // Chame a função _populateInitialData aqui
   await _populateInitialData(db);
 
   runApp(const MyApp());

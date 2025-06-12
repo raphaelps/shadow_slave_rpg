@@ -1,11 +1,6 @@
 // lib/models/biography_choices.dart
 import 'package:drift/drift.dart';
-//import 'package:uuid/uuid.dart'; // Importe para gerar IDs únicos
-import 'package:shadow_slave_rpg/models/character.dart'; // Para CharacterRankConverter
-import 'package:shadow_slave_rpg/models/ability.dart'; // Para AspectTypeConverter
-
-// Instância local do gerador de UUID
-//final uuid = Uuid();
+import '_models.dart';
 
 // Tabela para armazenar os traços que um personagem pode ter
 @DataClassName('TraitData')
@@ -14,6 +9,11 @@ class Traits extends Table {
       text().clientDefault(() => uuid.v4())(); // ID único do traço
   TextColumn get name => text().withLength(min: 1, max: 100)(); // Nome do traço
   TextColumn get description => text().nullable()(); // Descrição do traço
+  // NOVOS CAMPOS PARA PONTOS FORTES/FRACOS (RIMWORLD STYLE)
+  BoolColumn get isStrength =>
+      boolean().withDefault(const Constant(false))(); // Se é um ponto forte
+  BoolColumn get isWeakness =>
+      boolean().withDefault(const Constant(false))(); // Se é um ponto fraco
 
   @override
   Set<Column> get primaryKey => {id};
@@ -28,7 +28,6 @@ class ChildhoodChoices extends Table {
       text().withLength(min: 1, max: 255)(); // Descrição da escolha
   TextColumn get traitId =>
       text().references(Traits, #id).nullable()(); // Traço associado (opcional)
-  // Pode adicionar colunas para bônus de atributos se a escolha der bônus diretos
   IntColumn get strengthBonus => integer().withDefault(const Constant(0))();
   IntColumn get agilityBonus => integer().withDefault(const Constant(0))();
   IntColumn get intelligenceBonus => integer().withDefault(const Constant(0))();
@@ -55,9 +54,10 @@ class MajorEventChoices extends Table {
   Set<Column> get primaryKey => {id};
 }
 
-// Tabela para armazenar as escolhas de Despertar Sombrio
-@DataClassName('DarkAwakeningChoiceData')
-class DarkAwakeningChoices extends Table {
+// RENOMEADO: Tabela para armazenar as escolhas Adultas (antigo Despertar Sombrio)
+@DataClassName('AdultChoiceData') // NOVO NOME DA CLASSE GERADA
+class AdultChoices extends Table {
+  // NOVO NOME DA TABELA
   TextColumn get id => text().clientDefault(() => uuid.v4())();
   TextColumn get description => text().withLength(min: 1, max: 255)();
   TextColumn get traitId => text().references(Traits, #id).nullable()();

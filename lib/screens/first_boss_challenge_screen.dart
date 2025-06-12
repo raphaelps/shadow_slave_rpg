@@ -1,19 +1,18 @@
 // lib/screens/first_boss_challenge_screen.dart
-import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
+import 'package:shadow_slave_rpg/database/database.dart';
 import 'package:shadow_slave_rpg/main.dart'; // Para acessar a instância global do banco de dados `db`
 import 'package:shadow_slave_rpg/models/_models.dart'; // Importa todos os modelos
 import 'package:shadow_slave_rpg/utils/dice_roller.dart'; // Para a rolagem de dados
 import 'package:shadow_slave_rpg/screens/power_revelation_screen.dart'; // Próxima tela
 import 'package:shadow_slave_rpg/screens/character_creation_screen.dart'; // Para resetar a conta
-
-
-import '../database/database.dart'; // Para usar Value()
+import 'package:drift/drift.dart' show Value; // Para usar Value()
 
 class FirstBossChallengeScreen extends StatefulWidget {
   final CharacterData character;
 
-  const FirstBossChallengeScreen({super.key, required this.character});
+  const FirstBossChallengeScreen({Key? key, required this.character})
+    : super(key: key);
 
   @override
   State<FirstBossChallengeScreen> createState() =>
@@ -77,13 +76,14 @@ class _FirstBossChallengeScreenState extends State<FirstBossChallengeScreen> {
     final newRank =
         CharacterRank.sleeper; // Após o primeiro boss, o rank se torna Sleeper
 
-    // Busca a escolha de Dark Awakening pelo ID e usa seu AspectType
+    // Busca a escolha Adulta pelo ID e usa seu AspectType
     String? assignedAspect;
-    if (_character.darkAwakeningChoiceId != null) {
-      final darkAwakeningChoice = await db.getDarkAwakeningChoiceById(
-        _character.darkAwakeningChoiceId!,
-      );
-      assignedAspect = darkAwakeningChoice?.aspectType?.displayName;
+    if (_character.adultChoiceId != null) {
+      // RENOMEADO AQUI
+      final adultChoice = await db.getAdultChoiceById(
+        _character.adultChoiceId!,
+      ); // RENOMEADO AQUI
+      assignedAspect = adultChoice?.aspectType?.displayName;
     }
 
     // Fallback caso não encontre ou o aspecto não esteja definido
@@ -111,19 +111,34 @@ class _FirstBossChallengeScreenState extends State<FirstBossChallengeScreen> {
       abilitiesRevealed: Value(true), // Atualizado
       childhoodChoiceId: Value(_character.childhoodChoiceId),
       majorEventChoiceId: Value(_character.majorEventChoiceId),
-      darkAwakeningChoiceId: Value(_character.darkAwakeningChoiceId),
+      adultChoiceId: Value(_character.adultChoiceId), // RENOMEADO AQUI
+      // NOVAS RESISTÊNCIAS: Garante que os valores atuais são passados para não serem resetados
+      resistanceMental: Value(_character.resistanceMental),
+      resistanceSpiritual: Value(_character.resistanceSpiritual),
+      resistanceElementalHeat: Value(_character.resistanceElementalHeat),
+      resistanceElementalCold: Value(_character.resistanceElementalCold),
+      resistanceElementalPoison: Value(_character.resistanceElementalPoison),
+      resistancePhysical: Value(_character.resistancePhysical),
     );
 
     // Atualiza o personagem no banco de dados local
     await db.updateCharacter(updatedCharacterCompanion);
     setState(() {
       // Atualiza o objeto CharacterData localmente para refletir as mudanças
+      // usando copyWith para as novas colunas
       _character = _character.copyWith(
         rank: newRank,
         aspect: Value(assignedAspect),
         coreLevel: updatedCoreLevel,
         coreProgress: updatedCoreProgress,
         abilitiesRevealed: true,
+        // Garante que as resistências são mantidas no objeto local atualizado
+        resistanceMental: _character.resistanceMental,
+        resistanceSpiritual: _character.resistanceSpiritual,
+        resistanceElementalHeat: _character.resistanceElementalHeat,
+        resistanceElementalCold: _character.resistanceElementalCold,
+        resistanceElementalPoison: _character.resistanceElementalPoison,
+        resistancePhysical: _character.resistancePhysical,
       );
     });
     print(
